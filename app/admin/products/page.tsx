@@ -92,7 +92,7 @@ export default function AdminProductsPage() {
 
   const handleBulkDelete = async () => {
     if (!confirm(`Delete ${selected.size} products?`)) return
-    for (const id of selected) {
+    for (const id of Array.from(selected)) {
       await fetch(`/api/products/${id}`, { method: 'DELETE' })
     }
     setProducts(prev => prev.filter(p => !selected.has(p.id)))

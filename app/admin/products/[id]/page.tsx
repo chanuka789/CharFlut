@@ -512,7 +512,7 @@ export default function ProductEditorPage({ params }: { params: { id: string } }
           {/* Featured image */}
           <div className="panel" style={{ padding: 20 }}>
             <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Featured Image</div>
-            <div style={{ aspect: '1', height: 180, borderRadius: 12, background: 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))', border: '2px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: 'var(--text-muted)', fontSize: 12 }}>
+            <div style={{ aspectRatio: '1', height: 180, borderRadius: 12, background: 'linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02))', border: '2px dashed var(--border)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 8, cursor: 'pointer', color: 'var(--text-muted)', fontSize: 12 }}>
               <span style={{ fontSize: 32 }}>🖼️</span>
               <span>Click to upload</span>
             </div>

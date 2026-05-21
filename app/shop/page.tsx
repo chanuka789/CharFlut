@@ -73,7 +73,7 @@ function ShopContent() {
         if (res.ok) {
           const data = await res.json()
           setAllProducts(data.products || [])
-          const cats = [...new Set(data.products.map((p: Product) => p.category?.name).filter(Boolean))] as string[]
+          const cats = Array.from(new Set(data.products.map((p: Product) => p.category?.name).filter(Boolean))) as string[]
           setCategories(cats)
         }
       } catch {
