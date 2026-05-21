@@ -69,16 +69,20 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
   useEffect(() => {
     const fetchProduct = async () => {
       try {
-        const res = await fetch(`/api/products?slug=${params.slug}`)
-        if (res.ok) {
-          const data = await res.json()
-          if (data.products?.[0]) {
-            setProduct(data.products[0])
-          } else {
-            setProduct(DUMMY_PRODUCT)
-          }
+        // First get by slug to find the ID
+        const listRes = await fetch(`/api/products?slug=${params.slug}`)
+        if (!listRes.ok) { setProduct(DUMMY_PRODUCT); setLoading(false); return }
+        const listData = await listRes.json()
+        const basic = listData.products?.[0]
+        if (!basic) { setProduct(DUMMY_PRODUCT); setLoading(false); return }
+
+        // Then fetch full detail (includes all images)
+        const detailRes = await fetch(`/api/products/${basic.id}`)
+        if (detailRes.ok) {
+          const detail = await detailRes.json()
+          setProduct(detail.error ? basic : detail)
         } else {
-          setProduct(DUMMY_PRODUCT)
+          setProduct(basic)
         }
       } catch {
         setProduct(DUMMY_PRODUCT)

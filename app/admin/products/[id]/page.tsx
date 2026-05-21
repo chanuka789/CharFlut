@@ -64,6 +64,8 @@ export default function ProductEditorPage({ params }: { params: { id: string } }
   const [toastType, setToastType] = useState<'success' | 'error'>('success')
   const [tagInput, setTagInput] = useState('')
   const [colorInput, setColorInput] = useState('#')
+  // pendingImages holds data URLs for unsaved new products
+  const [pendingImages, setPendingImages] = useState<{ url: string; featured: boolean }[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [allCollections, setAllCollections] = useState<Collection[]>([])
   const [productCollectionIds, setProductCollectionIds] = useState<Set<string>>(new Set())
@@ -168,6 +170,15 @@ export default function ProductEditorPage({ params }: { params: { id: string } }
 
       if (res.ok) {
         const data = await res.json()
+        if (isNew && pendingImages.length > 0) {
+          await Promise.all(pendingImages.map((img, i) =>
+            fetch(`/api/products/${data.id}/images`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ url: img.url, position: img.featured ? 0 : i + 1 }),
+            })
+          ))
+        }
         showToast(isNew ? 'Product created!' : 'Product saved!')
         if (isNew) {
           router.push(`/admin/products/${data.id}`)
@@ -217,12 +228,22 @@ export default function ProductEditorPage({ params }: { params: { id: string } }
       fd.append('file', file)
       const res = await fetch('/api/upload', { method: 'POST', body: fd })
       if (!res.ok) {
-        showToast('Upload failed', 'error')
+        const err = await res.json().catch(() => ({}))
+        showToast(err.error || 'Upload failed', 'error')
         return
       }
       const { url } = await res.json()
+      if (!url) { showToast('Upload failed', 'error'); return }
 
-      if (!isNew) {
+      if (isNew) {
+        // Store pending for when product is saved
+        if (asFeatured) {
+          setPendingImages(prev => [{ url, featured: true }, ...prev.filter(i => !i.featured)])
+        } else {
+          setPendingImages(prev => [...prev, { url, featured: false }])
+        }
+        showToast('Image ready — will be saved with the product')
+      } else {
         const position = asFeatured ? 0 : images.length
         const imgRes = await fetch(`/api/products/${params.id}/images`, {
           method: 'POST',
@@ -237,9 +258,9 @@ export default function ProductEditorPage({ params }: { params: { id: string } }
             setImages(prev => [...prev, newImg])
           }
           showToast('Image uploaded!')
+        } else {
+          showToast('Failed to save image', 'error')
         }
-      } else {
-        showToast('Save the product first, then upload images', 'error')
       }
     } catch {
       showToast('Upload failed', 'error')
@@ -296,6 +317,9 @@ export default function ProductEditorPage({ params }: { params: { id: string } }
 
   const featuredImage = images.find(i => i.position === 0) || images[0]
   const galleryImages = images.filter(i => i !== featuredImage)
+  // For new products, derive display images from pending list
+  const pendingFeatured = isNew ? (pendingImages.find(i => i.featured) || pendingImages[0]) : null
+  const pendingGallery = isNew ? pendingImages.filter(i => i !== pendingFeatured) : []
 
   if (loading) {
     return (
@@ -520,17 +544,18 @@ export default function ProductEditorPage({ params }: { params: { id: string } }
           <div className="panel" style={{ padding: 20 }}>
             <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Featured Image</div>
             <input ref={fileInputRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleFeaturedUpload} />
-            {featuredImage ? (
+            {(featuredImage || pendingFeatured) ? (
               <div className="img-thumb" style={{ height: 180 }}>
-                <img src={featuredImage.url} alt={featuredImage.alt || ''} />
-                <button className="img-thumb-del" onClick={() => deleteImage(featuredImage.id)}>×</button>
+                <img src={featuredImage?.url || pendingFeatured?.url} alt="Featured" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                {featuredImage && (
+                  <button className="img-thumb-del" onClick={() => deleteImage(featuredImage.id)}>×</button>
+                )}
+                {pendingFeatured && !featuredImage && (
+                  <button className="img-thumb-del" onClick={() => setPendingImages(prev => prev.filter(i => i !== pendingFeatured))}>×</button>
+                )}
               </div>
             ) : (
-              <div
-                className="upload-zone"
-                style={{ height: 180 }}
-                onClick={() => isNew ? showToast('Save product first, then upload images', 'error') : fileInputRef.current?.click()}
-              >
+              <div className="upload-zone" style={{ height: 180 }} onClick={() => fileInputRef.current?.click()}>
                 {uploading ? (
                   <div style={{ width: 24, height: 24, border: '2px solid var(--border)', borderTopColor: 'var(--accent)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
                 ) : (
@@ -538,13 +563,13 @@ export default function ProductEditorPage({ params }: { params: { id: string } }
                     <svg width="28" height="28" fill="none" stroke="currentColor" strokeWidth="1.5" viewBox="0 0 24 24">
                       <rect x="3" y="3" width="18" height="18" rx="2"/><circle cx="8.5" cy="8.5" r="1.5"/><polyline points="21 15 16 10 5 21"/>
                     </svg>
-                    <span>{isNew ? 'Save product first' : 'Click to upload'}</span>
-                    <span style={{ fontSize: 10, opacity: 0.6 }}>JPEG, PNG, WebP · max 10MB</span>
+                    <span>Click to upload</span>
+                    <span style={{ fontSize: 10, opacity: 0.6 }}>JPEG, PNG, WebP · max 4MB</span>
                   </>
                 )}
               </div>
             )}
-            {featuredImage && !isNew && (
+            {(featuredImage || pendingFeatured) && (
               <button className="btn-g btn-sm" style={{ width: '100%', marginTop: 8 }} onClick={() => fileInputRef.current?.click()}>
                 Replace image
               </button>
@@ -554,20 +579,29 @@ export default function ProductEditorPage({ params }: { params: { id: string } }
           {/* Gallery */}
           <div className="panel" style={{ padding: 20 }}>
             <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>
-              Gallery ({galleryImages.length})
+              Gallery ({isNew ? pendingGallery.length : galleryImages.length})
             </div>
             <input ref={galleryInputRef} type="file" accept="image/*" multiple style={{ display: 'none' }} onChange={handleGalleryUpload} />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
-              {galleryImages.map(img => (
-                <div key={img.id} className="img-thumb" style={{ aspectRatio: '1' }}>
-                  <img src={img.url} alt={img.alt || ''} />
-                  <button className="img-thumb-del" onClick={() => deleteImage(img.id)}>×</button>
+              {(isNew ? pendingGallery : galleryImages).map((img, idx) => (
+                <div key={isNew ? idx : (img as ProductImage).id} className="img-thumb" style={{ aspectRatio: '1' }}>
+                  <img src={img.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  <button
+                    className="img-thumb-del"
+                    onClick={() => {
+                      if (isNew) {
+                        setPendingImages(prev => prev.filter(i => i !== img))
+                      } else {
+                        deleteImage((img as ProductImage).id)
+                      }
+                    }}
+                  >×</button>
                 </div>
               ))}
               <div
                 className="upload-zone"
                 style={{ aspectRatio: '1', fontSize: 20, borderRadius: 8 }}
-                onClick={() => isNew ? showToast('Save product first, then upload images', 'error') : galleryInputRef.current?.click()}
+                onClick={() => galleryInputRef.current?.click()}
               >
                 +
               </div>

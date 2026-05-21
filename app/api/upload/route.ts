@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
-import { writeFile, mkdir } from 'fs/promises'
-import { join } from 'path'
 
 export async function POST(req: NextRequest) {
   try {
@@ -23,21 +21,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Only JPEG, PNG, WebP, and GIF are allowed' }, { status: 400 })
     }
 
-    if (file.size > 10 * 1024 * 1024) {
-      return NextResponse.json({ error: 'File must be under 10MB' }, { status: 400 })
+    if (file.size > 4 * 1024 * 1024) {
+      return NextResponse.json({ error: 'File must be under 4MB' }, { status: 400 })
     }
 
     const bytes = await file.arrayBuffer()
-    const buffer = Buffer.from(bytes)
+    const base64 = Buffer.from(bytes).toString('base64')
+    const dataUrl = `data:${file.type};base64,${base64}`
 
-    const ext = file.name.split('.').pop()?.toLowerCase()?.replace(/[^a-z]/g, '') || 'jpg'
-    const filename = `${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${ext}`
-
-    const uploadDir = join(process.cwd(), 'public', 'uploads')
-    await mkdir(uploadDir, { recursive: true })
-    await writeFile(join(uploadDir, filename), buffer)
-
-    return NextResponse.json({ url: `/api/files/${filename}` })
+    return NextResponse.json({ url: dataUrl })
   } catch (error) {
     console.error('Upload error:', error)
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
