@@ -12,6 +12,12 @@ interface Category {
   slug: string
 }
 
+interface Collection {
+  id: string
+  name: string
+  slug: string
+}
+
 interface ProductImage {
   id: string
   url: string
@@ -59,6 +65,8 @@ export default function ProductEditorPage({ params }: { params: { id: string } }
   const [tagInput, setTagInput] = useState('')
   const [colorInput, setColorInput] = useState('#')
   const [categories, setCategories] = useState<Category[]>([])
+  const [allCollections, setAllCollections] = useState<Collection[]>([])
+  const [productCollectionIds, setProductCollectionIds] = useState<Set<string>>(new Set())
   const [images, setImages] = useState<ProductImage[]>([])
   const [uploading, setUploading] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -68,6 +76,11 @@ export default function ProductEditorPage({ params }: { params: { id: string } }
     fetch('/api/categories')
       .then(r => r.json())
       .then(data => setCategories(data.categories || []))
+      .catch(() => {})
+
+    fetch('/api/collections?limit=100')
+      .then(r => r.json())
+      .then(data => setAllCollections((data.collections || []).map((c: any) => ({ id: c.id, name: c.name, slug: c.slug }))))
       .catch(() => {})
   }, [])
 
@@ -97,6 +110,8 @@ export default function ProductEditorPage({ params }: { params: { id: string } }
               metaDesc: '',
             })
             setImages(data.images || [])
+            const colIds = new Set<string>((data.collections || []).map((cp: any) => cp.collectionId as string))
+            setProductCollectionIds(colIds)
           }
         })
         .catch(() => {})
@@ -165,6 +180,33 @@ export default function ProductEditorPage({ params }: { params: { id: string } }
       showToast('Error saving product', 'error')
     } finally {
       setSaving(false)
+    }
+  }
+
+  const toggleCollection = async (collectionId: string) => {
+    if (isNew) { showToast('Save product first', 'error'); return }
+    const inCollection = productCollectionIds.has(collectionId)
+    try {
+      const res = await fetch(
+        `/api/collections/${collectionId}/products${inCollection ? `?productId=${params.id}` : ''}`,
+        {
+          method: inCollection ? 'DELETE' : 'POST',
+          headers: inCollection ? undefined : { 'Content-Type': 'application/json' },
+          body: inCollection ? undefined : JSON.stringify({ productId: params.id }),
+        }
+      )
+      if (res.ok) {
+        setProductCollectionIds(prev => {
+          const next = new Set(prev)
+          if (inCollection) next.delete(collectionId)
+          else next.add(collectionId)
+          return next
+        })
+      } else {
+        showToast('Failed to update collection', 'error')
+      }
+    } catch {
+      showToast('Error updating collection', 'error')
     }
   }
 
@@ -531,6 +573,33 @@ export default function ProductEditorPage({ params }: { params: { id: string } }
               </div>
             </div>
           </div>
+
+          {/* Collections */}
+          {allCollections.length > 0 && (
+            <div className="panel" style={{ padding: 20 }}>
+              <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 12 }}>Collections</div>
+              {isNew && (
+                <p style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 12 }}>Save product first to assign collections.</p>
+              )}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {allCollections.map(col => {
+                  const checked = productCollectionIds.has(col.id)
+                  return (
+                    <label key={col.id} style={{ display: 'flex', alignItems: 'center', gap: 10, cursor: isNew ? 'not-allowed' : 'pointer', opacity: isNew ? 0.5 : 1, fontSize: 13 }}>
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={() => toggleCollection(col.id)}
+                        disabled={isNew}
+                        style={{ accentColor: 'var(--accent)', width: 15, height: 15 }}
+                      />
+                      <span style={{ color: checked ? 'var(--text-primary)' : 'var(--text-muted)' }}>{col.name}</span>
+                    </label>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

@@ -327,27 +327,33 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         <div className="pdp-layout">
           {/* Gallery */}
           <div className="gallery">
-            <div className="gallery-main glass" onClick={() => setLightboxOpen(true)}>
-              <div className="gallery-main-placeholder">
-                <span>{p.category?.name === 'Electronics' ? '⚡' : p.category?.name === 'Fashion' ? '👗' : '🛍️'}</span>
-                <span style={{ fontSize: 14, color: 'var(--text-muted)', fontFamily: 'Courier New' }}>
-                  Image {activeImage + 1}
-                </span>
-              </div>
-            </div>
-            <div className="gallery-thumbs">
-              {[0, 1, 2, 3].map(i => (
-                <div
-                  key={i}
-                  className={`gallery-thumb${activeImage === i ? ' active' : ''}`}
-                  onClick={() => setActiveImage(i)}
-                >
-                  <div className="thumb-inner">
-                    {['⚡', '↖', '↗', '↙'][i]}
-                  </div>
+            <div className="gallery-main glass" onClick={() => p.images?.length > 0 && setLightboxOpen(true)}>
+              {p.images && p.images.length > 0 ? (
+                <img
+                  src={p.images[Math.min(activeImage, p.images.length - 1)]?.url}
+                  alt={p.images[Math.min(activeImage, p.images.length - 1)]?.alt || p.name}
+                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                />
+              ) : (
+                <div className="gallery-main-placeholder">
+                  <span>{p.category?.name === 'Electronics' ? '⚡' : p.category?.name === 'Fashion' ? '👗' : '🛍️'}</span>
+                  <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>No image</span>
                 </div>
-              ))}
+              )}
             </div>
+            {p.images && p.images.length > 1 && (
+              <div className="gallery-thumbs">
+                {p.images.map((img: any, i: number) => (
+                  <div
+                    key={img.id}
+                    className={`gallery-thumb${activeImage === i ? ' active' : ''}`}
+                    onClick={() => setActiveImage(i)}
+                  >
+                    <img src={img.url} alt={img.alt || p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Info */}
@@ -584,14 +590,15 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
       </div>
 
       {/* Lightbox */}
-      {lightboxOpen && (
+      {lightboxOpen && p.images?.length > 0 && (
         <div className="lightbox" onClick={() => setLightboxOpen(false)}>
           <button className="lightbox-close" onClick={() => setLightboxOpen(false)}>×</button>
-          <div className="lightbox-content glass" onClick={e => e.stopPropagation()}>
-            <div className="gallery-main-placeholder" style={{ height: '100%' }}>
-              <span style={{ fontSize: 120 }}>{p.category?.name === 'Electronics' ? '⚡' : '🛍️'}</span>
-              <span style={{ fontSize: 14, color: 'var(--text-muted)', fontFamily: 'Courier New' }}>Product Image {activeImage + 1}</span>
-            </div>
+          <div className="lightbox-content" onClick={e => e.stopPropagation()}>
+            <img
+              src={p.images[Math.min(activeImage, p.images.length - 1)]?.url}
+              alt={p.name}
+              style={{ width: '100%', height: '100%', objectFit: 'contain', borderRadius: 24 }}
+            />
           </div>
         </div>
       )}
