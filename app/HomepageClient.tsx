@@ -21,26 +21,6 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
   Sports: 'linear-gradient(135deg, rgba(52,211,153,0.15), rgba(96,165,250,0.12))',
 }
 
-const FALLBACK_CATEGORIES = [
-  { id: '1', name: 'Electronics', slug: 'electronics', _count: { products: 124 } },
-  { id: '2', name: 'Fashion', slug: 'fashion', _count: { products: 287 } },
-  { id: '3', name: 'Home & Living', slug: 'home-living', _count: { products: 156 } },
-  { id: '4', name: 'Beauty', slug: 'beauty', _count: { products: 98 } },
-  { id: '5', name: 'Accessories', slug: 'accessories', _count: { products: 203 } },
-  { id: '6', name: 'Sports', slug: 'sports', _count: { products: 167 } },
-]
-
-const FALLBACK_PRODUCTS = [
-  { id: '1', name: 'Minimal Wireless Headphones', slug: 'minimal-wireless-headphones', price: 299, colors: ['#1a1a1a', '#f5f5f5', '#FFD32C'], isBest: true, isNew: false },
-  { id: '2', name: 'Premium Leather Bag', slug: 'premium-leather-bag', price: 459, colors: ['#8B4513', '#1a1a1a'], isBest: false, isNew: true },
-  { id: '3', name: 'Smart Watch Pro', slug: 'smart-watch-pro', price: 599, colors: ['#1a1a1a', '#c0c0c0', '#ffd700'], isBest: true, isNew: false },
-  { id: '4', name: 'Designer Sunglasses', slug: 'designer-sunglasses', price: 329, colors: ['#1a1a1a', '#8B4513'], isBest: false, isNew: true },
-  { id: '5', name: 'Minimalist Desk Lamp', slug: 'minimalist-desk-lamp', price: 189, colors: ['#f5f5f5', '#1a1a1a'], isBest: false, isNew: false },
-  { id: '6', name: 'Organic Cotton Tee', slug: 'organic-cotton-tee', price: 79, colors: ['#f5f5f5', '#1a1a1a', '#4169E1'], isBest: false, isNew: true },
-  { id: '7', name: 'Ceramic Coffee Mug', slug: 'ceramic-coffee-mug', price: 45, colors: ['#f5f5f5', '#FFD32C', '#34D399'], isBest: false, isNew: false },
-  { id: '8', name: 'Yoga Mat Premium', slug: 'yoga-mat-premium', price: 89, colors: ['#1a1a1a', '#9370DB', '#FFD32C'], isBest: true, isNew: false },
-]
-
 interface Product {
   id: string
   name: string
@@ -52,6 +32,26 @@ interface Product {
   isNew?: boolean
   stock?: number
 }
+
+const FALLBACK_CATEGORIES = [
+  { id: '1', name: 'Electronics', slug: 'electronics', _count: { products: 124 } },
+  { id: '2', name: 'Fashion', slug: 'fashion', _count: { products: 287 } },
+  { id: '3', name: 'Home & Living', slug: 'home-living', _count: { products: 156 } },
+  { id: '4', name: 'Beauty', slug: 'beauty', _count: { products: 98 } },
+  { id: '5', name: 'Accessories', slug: 'accessories', _count: { products: 203 } },
+  { id: '6', name: 'Sports', slug: 'sports', _count: { products: 167 } },
+]
+
+const FALLBACK_PRODUCTS: Product[] = [
+  { id: '1', name: 'Minimal Wireless Headphones', slug: 'minimal-wireless-headphones', price: 299, colors: ['#1a1a1a', '#f5f5f5', '#FFD32C'], isBest: true, isNew: false },
+  { id: '2', name: 'Premium Leather Bag', slug: 'premium-leather-bag', price: 459, colors: ['#8B4513', '#1a1a1a'], isBest: false, isNew: true },
+  { id: '3', name: 'Smart Watch Pro', slug: 'smart-watch-pro', price: 599, colors: ['#1a1a1a', '#c0c0c0', '#ffd700'], isBest: true, isNew: false },
+  { id: '4', name: 'Designer Sunglasses', slug: 'designer-sunglasses', price: 329, colors: ['#1a1a1a', '#8B4513'], isBest: false, isNew: true },
+  { id: '5', name: 'Minimalist Desk Lamp', slug: 'minimalist-desk-lamp', price: 189, colors: ['#f5f5f5', '#1a1a1a'], isBest: false, isNew: false },
+  { id: '6', name: 'Organic Cotton Tee', slug: 'organic-cotton-tee', price: 79, colors: ['#f5f5f5', '#1a1a1a', '#4169E1'], isBest: false, isNew: true },
+  { id: '7', name: 'Ceramic Coffee Mug', slug: 'ceramic-coffee-mug', price: 45, colors: ['#f5f5f5', '#FFD32C', '#34D399'], isBest: false, isNew: false },
+  { id: '8', name: 'Yoga Mat Premium', slug: 'yoga-mat-premium', price: 89, colors: ['#1a1a1a', '#9370DB', '#FFD32C'], isBest: true, isNew: false },
+]
 
 interface Category {
   id: string
