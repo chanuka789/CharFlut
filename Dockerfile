@@ -30,7 +30,7 @@ COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
 COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
 
 # Public folder
-RUN mkdir -p ./public
+RUN mkdir -p ./public/uploads && chmod 777 ./public/uploads
 
 # Prisma
 COPY --from=builder --chown=nextjs:nodejs /app/prisma ./prisma

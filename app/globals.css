@@ -890,6 +890,12 @@ a {
   color: var(--success);
 }
 
+.toast-error {
+  background: rgba(239,68,68,0.15);
+  border: 1px solid rgba(239,68,68,0.3);
+  color: var(--danger);
+}
+
 /* === TABLES === */
 .dtable {
   width: 100%;

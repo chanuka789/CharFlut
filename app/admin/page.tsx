@@ -1,37 +1,73 @@
 'use client'
 
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-const RECENT_ORDERS = [
-  { id: '#CF-1001', customer: 'Alex Johnson', product: 'Wireless Headphones', total: 299.00, status: 'Delivered', date: 'May 20' },
-  { id: '#CF-1002', customer: 'Sam Rivera', product: 'Smart Watch Pro', total: 599.00, status: 'Processing', date: 'May 20' },
-  { id: '#CF-1003', customer: 'Jordan Lee', product: 'Leather Bag', total: 459.00, status: 'Shipped', date: 'May 19' },
-  { id: '#CF-1004', customer: 'Taylor Kim', product: 'Yoga Mat Premium', total: 89.00, status: 'Pending', date: 'May 19' },
-  { id: '#CF-1005', customer: 'Morgan Chen', product: 'Desk Lamp', total: 189.00, status: 'Delivered', date: 'May 18' },
-]
+interface RecentOrder {
+  id: string
+  total: number
+  status: string
+  createdAt: string
+  user: { name: string | null; email: string }
+  items: { product: { name: string } }[]
+}
 
-const LOW_STOCK = [
-  { name: 'Smart Watch Pro (Gold)', stock: 2, sku: 'SWP-GLD' },
-  { name: 'Designer Sunglasses', stock: 4, sku: 'DS-001' },
-  { name: 'Yoga Mat Premium (Purple)', stock: 3, sku: 'YMP-PRP' },
-]
+interface LowStockItem {
+  id: string
+  name: string
+  stock: number
+  sku: string | null
+}
+
+interface Stats {
+  revenue: { current: number; growth: string | null }
+  orders: { current: number; growth: string | null }
+  customers: { current: number; growth: string | null }
+  totalProducts: number
+  totalCollections: number
+  recentOrders: RecentOrder[]
+  lowStock: LowStockItem[]
+}
 
 const STATUS_CLASSES: Record<string, string> = {
-  Delivered: 'pill-green',
-  Shipped: 'pill-blue',
-  Processing: 'pill-yellow',
-  Pending: 'pill-gray',
+  DELIVERED: 'pill-green',
+  SHIPPED: 'pill-blue',
+  PROCESSING: 'pill-yellow',
+  PENDING: 'pill-gray',
+  CANCELLED: 'pill-red',
+}
+
+function fmtDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
+}
+
+function fmtGrowth(growth: string | null) {
+  if (growth === null) return { label: 'No data', up: true }
+  const num = parseFloat(growth)
+  return { label: `${num >= 0 ? '+' : ''}${growth}% vs last month`, up: num >= 0 }
 }
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState<Stats | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    fetch('/api/admin/stats')
+      .then(r => r.json())
+      .then(data => {
+        if (!data.error) setStats(data)
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
   return (
     <>
       <style>{`
         .admin-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
-        .sparkline { height: 36px; display: flex; align-items: flex-end; gap: 2px; }
-        .spark-bar { flex: 1; border-radius: 2px 2px 0 0; background: rgba(255,211,44,0.3); transition: background 0.2s; }
-        .spark-bar:hover { background: rgba(255,211,44,0.6); }
         .admin-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
+        .kpi-skeleton { height: 18px; border-radius: 6px; background: rgba(255,255,255,0.06); animation: pulse 1.5s ease-in-out infinite; }
+        @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
         @media (max-width: 1200px) {
           .admin-kpis { grid-template-columns: repeat(2, 1fr); }
           .admin-grid { grid-template-columns: 1fr; }
@@ -41,7 +77,9 @@ export default function AdminDashboard() {
       <div className="page-header">
         <div>
           <h1 style={{ fontSize: 22, fontWeight: 700 }}>Dashboard Overview</h1>
-          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>Welcome back! Here's what's happening today.</p>
+          <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>
+            {new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' })} snapshot
+          </p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
           <Link href="/admin/products" className="btn-g">
@@ -57,24 +95,49 @@ export default function AdminDashboard() {
       {/* KPIs */}
       <div className="admin-kpis">
         {[
-          { label: 'Revenue (May)', value: '$48,291', delta: '+18.4%', up: true, spark: [35, 42, 38, 55, 60, 45, 72, 80, 65, 90] },
-          { label: 'Orders', value: '1,247', delta: '+12.3%', up: true, spark: [30, 45, 35, 50, 48, 55, 62, 58, 70, 75] },
-          { label: 'Customers', value: '4,831', delta: '+8.7%', up: true, spark: [60, 65, 62, 68, 72, 70, 75, 78, 80, 85] },
-          { label: 'Conversion Rate', value: '3.42%', delta: '-0.3%', up: false, spark: [45, 48, 52, 49, 45, 50, 48, 44, 46, 43] },
-        ].map((kpi, i) => (
-          <div key={i} className="kpi-card panel">
-            <div className="kpi-label">{kpi.label}</div>
-            <div className="kpi-value">{kpi.value}</div>
-            <div className={`kpi-delta ${kpi.up ? 'up' : 'down'}`}>
-              {kpi.up ? '↑' : '↓'} {kpi.delta} vs last month
+          {
+            label: `Revenue (${new Date().toLocaleDateString('en-US', { month: 'short' })})`,
+            value: loading ? null : `$${(stats?.revenue.current || 0).toFixed(2)}`,
+            growth: loading ? null : stats?.revenue.growth ?? null,
+          },
+          {
+            label: 'Orders (this month)',
+            value: loading ? null : String(stats?.orders.current || 0),
+            growth: loading ? null : stats?.orders.growth ?? null,
+          },
+          {
+            label: 'New Customers',
+            value: loading ? null : String(stats?.customers.current || 0),
+            growth: loading ? null : stats?.customers.growth ?? null,
+          },
+          {
+            label: 'Total Products',
+            value: loading ? null : String(stats?.totalProducts || 0),
+            growth: null,
+          },
+        ].map((kpi, i) => {
+          const g = fmtGrowth(kpi.growth)
+          return (
+            <div key={i} className="kpi-card panel">
+              <div className="kpi-label">{kpi.label}</div>
+              {kpi.value === null ? (
+                <>
+                  <div className="kpi-skeleton" style={{ width: '60%', height: 28, margin: '8px 0' }} />
+                  <div className="kpi-skeleton" style={{ width: '80%', height: 14, marginTop: 4 }} />
+                </>
+              ) : (
+                <>
+                  <div className="kpi-value">{kpi.value}</div>
+                  {kpi.growth !== null && (
+                    <div className={`kpi-delta ${g.up ? 'up' : 'down'}`}>
+                      {g.up ? '↑' : '↓'} {g.label}
+                    </div>
+                  )}
+                </>
+              )}
             </div>
-            <div className="sparkline" style={{ marginTop: 12 }}>
-              {kpi.spark.map((h, j) => (
-                <div key={j} className="spark-bar" style={{ height: `${h}%` }} />
-              ))}
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
 
       <div className="admin-grid">
@@ -83,8 +146,12 @@ export default function AdminDashboard() {
           <div className="panel-header">
             <span className="panel-title">Recent Orders</span>
             <div style={{ display: 'flex', gap: 8 }}>
-              <span className="pill-g pill-yellow">{RECENT_ORDERS.filter(o => o.status === 'Pending').length} pending</span>
-              <button className="btn-g btn-xs">View All</button>
+              {stats && (
+                <span className="pill-g pill-yellow">
+                  {stats.recentOrders.filter(o => o.status === 'PENDING').length} pending
+                </span>
+              )}
+              <Link href="/admin/orders" className="btn-g btn-xs">View All</Link>
             </div>
           </div>
           <div style={{ overflowX: 'auto' }}>
@@ -100,18 +167,38 @@ export default function AdminDashboard() {
                 </tr>
               </thead>
               <tbody>
-                {RECENT_ORDERS.map(order => (
-                  <tr key={order.id}>
-                    <td style={{ fontWeight: 600, color: 'var(--text-primary)' }}>{order.id}</td>
-                    <td>{order.customer}</td>
-                    <td style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{order.product}</td>
-                    <td style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>${order.total.toFixed(2)}</td>
-                    <td>
-                      <span className={`pill-g ${STATUS_CLASSES[order.status] || 'pill-gray'}`}>{order.status}</span>
+                {loading ? (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+                      Loading...
                     </td>
-                    <td style={{ color: 'var(--text-muted)' }}>{order.date}</td>
                   </tr>
-                ))}
+                ) : !stats || stats.recentOrders.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} style={{ textAlign: 'center', padding: 40, color: 'var(--text-muted)' }}>
+                      No orders yet
+                    </td>
+                  </tr>
+                ) : (
+                  stats.recentOrders.map(order => (
+                    <tr key={order.id}>
+                      <td style={{ fontWeight: 600, color: 'var(--text-primary)', fontFamily: 'monospace', fontSize: 11 }}>
+                        {order.id.substring(0, 8)}…
+                      </td>
+                      <td>{order.user.name || order.user.email}</td>
+                      <td style={{ maxWidth: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {order.items[0]?.product.name || '—'}
+                      </td>
+                      <td style={{ color: 'var(--accent-primary)', fontWeight: 600 }}>${order.total.toFixed(2)}</td>
+                      <td>
+                        <span className={`pill-g ${STATUS_CLASSES[order.status] || 'pill-gray'}`}>
+                          {order.status.charAt(0) + order.status.slice(1).toLowerCase()}
+                        </span>
+                      </td>
+                      <td style={{ color: 'var(--text-muted)' }}>{fmtDate(order.createdAt)}</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -121,21 +208,29 @@ export default function AdminDashboard() {
         <div className="panel">
           <div className="panel-header">
             <span className="panel-title">Low Stock Alerts</span>
-            <span className="pill-g pill-red">{LOW_STOCK.length}</span>
+            {stats && <span className="pill-g pill-red">{stats.lowStock.length}</span>}
           </div>
           <div className="panel-body">
-            {LOW_STOCK.map((item, i) => (
-              <div key={i} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: i < LOW_STOCK.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 2 }}>{item.name}</div>
-                  <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.sku}</div>
-                </div>
-                <div style={{ textAlign: 'right' }}>
-                  <div style={{ fontSize: 18, fontWeight: 700, color: item.stock <= 3 ? 'var(--danger)' : 'var(--warning)' }}>{item.stock}</div>
-                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>in stock</div>
-                </div>
+            {loading ? (
+              <div style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center', padding: 24 }}>Loading...</div>
+            ) : !stats || stats.lowStock.length === 0 ? (
+              <div style={{ color: 'var(--text-muted)', fontSize: 13, textAlign: 'center', padding: 24 }}>
+                All products well-stocked
               </div>
-            ))}
+            ) : (
+              stats.lowStock.map((item, i) => (
+                <div key={item.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 0', borderBottom: i < stats.lowStock.length - 1 ? '1px solid var(--border)' : 'none' }}>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-primary)', marginBottom: 2 }}>{item.name}</div>
+                    {item.sku && <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>{item.sku}</div>}
+                  </div>
+                  <div style={{ textAlign: 'right' }}>
+                    <div style={{ fontSize: 18, fontWeight: 700, color: item.stock <= 2 ? 'var(--danger)' : 'var(--warning)' }}>{item.stock}</div>
+                    <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>in stock</div>
+                  </div>
+                </div>
+              ))
+            )}
             <Link href="/admin/products" className="btn-g" style={{ width: '100%', marginTop: 16, justifyContent: 'center' }}>
               Manage Inventory
             </Link>
@@ -143,14 +238,14 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Quick stats row */}
+      {/* Quick stats */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginTop: 24 }}>
         {[
-          { label: 'Total Products', value: '1,247', icon: '📦', link: '/admin/products' },
-          { label: 'Collections', value: '8', icon: '🗂️', link: '/admin/collections' },
-          { label: 'Active Promotions', value: '3', icon: '🏷️', link: '/admin' },
+          { label: 'Total Products', value: loading ? '…' : String(stats?.totalProducts || 0), icon: '📦', link: '/admin/products' },
+          { label: 'Collections', value: loading ? '…' : String(stats?.totalCollections || 0), icon: '🗂️', link: '/admin/collections' },
+          { label: 'Orders', value: loading ? '…' : String(stats?.orders.current || 0), icon: '🛒', link: '/admin/orders' },
         ].map((stat, i) => (
-          <Link key={i} href={stat.link} className="panel" style={{ padding: 20, textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: 16, transition: 'transform 0.2s var(--spring)' }}>
+          <Link key={i} href={stat.link} className="panel" style={{ padding: 20, textDecoration: 'none', color: 'inherit', display: 'flex', alignItems: 'center', gap: 16 }}>
             <span style={{ fontSize: 32 }}>{stat.icon}</span>
             <div>
               <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text-primary)' }}>{stat.value}</div>
