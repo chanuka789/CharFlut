@@ -83,6 +83,23 @@ export function Header() {
     headerRef.current?.style.setProperty('--lg-active', '0')
   }
 
+  const handleTouchMove = (e: React.TouchEvent<HTMLElement>) => {
+    const el = headerRef.current
+    if (!el) return
+    const touch = e.touches[0]
+    if (!touch) return
+    const rect = el.getBoundingClientRect()
+    const x = ((touch.clientX - rect.left) / rect.width) * 100
+    const y = ((touch.clientY - rect.top) / rect.height) * 100
+    el.style.setProperty('--lg-mx', x + '%')
+    el.style.setProperty('--lg-my', y + '%')
+    el.style.setProperty('--lg-active', '1')
+  }
+
+  const handleTouchEnd = () => {
+    headerRef.current?.style.setProperty('--lg-active', '0')
+  }
+
   const openSearch = () => {
     setSearchOpen(true)
     setTimeout(() => searchInputRef.current?.focus(), 100)
@@ -405,7 +422,26 @@ export function Header() {
           box-shadow: 0 16px 40px rgba(0,0,0,0.12);
         }
 
-        .lg-mobile-menu.open { display: flex; overflow-y: auto; max-height: calc(100vh - 90px); -webkit-overflow-scrolling: touch; }
+        @keyframes menuSlideDown {
+          from {
+            opacity: 0;
+            transform: translateY(-12px) scale(0.97);
+            filter: blur(4px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+            filter: blur(0);
+          }
+        }
+
+        .lg-mobile-menu.open {
+          display: flex;
+          overflow-y: auto;
+          max-height: calc(100vh - 90px);
+          -webkit-overflow-scrolling: touch;
+          animation: menuSlideDown 0.4s var(--spring) forwards;
+        }
 
         .lg-mobile-menu a {
           padding: 14px 18px;
@@ -449,6 +485,9 @@ export function Header() {
           className={`lg-hdr${scrolled ? ' scrolled' : ''}`}
           onMouseMove={handleMouseMove}
           onMouseLeave={handleMouseLeave}
+          onTouchStart={handleTouchMove}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
         >
           <Link href="/" className="lg-logo">CharFlut</Link>
 
