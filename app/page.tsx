@@ -2,6 +2,8 @@ import { Suspense } from 'react'
 import { prisma } from '@/lib/prisma'
 import { HomepageClient } from './HomepageClient'
 
+export const dynamic = 'force-dynamic'
+
 async function getFeaturedProducts() {
   try {
     const products = await prisma.product.findMany({
