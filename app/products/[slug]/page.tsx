@@ -321,9 +321,31 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
           .trust-badges { grid-template-columns: repeat(3, 1fr); }
         }
         @media (max-width: 768px) {
-          .tabs { overflow-x: auto; }
+          .pdp-layout { padding: 100px 0 60px; gap: 28px; }
+          .tabs { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+          .tabs::-webkit-scrollbar { display: none; }
           .trust-badges { grid-template-columns: repeat(3, 1fr); gap: 8px; }
-          .cta-row { flex-direction: column; }
+          .trust-badge { padding: 12px 8px; }
+          .trust-badge-icon { font-size: 20px; margin-bottom: 6px; }
+          .trust-badge-title { font-size: 11px; }
+          .trust-badge-sub { font-size: 10px; display: none; }
+          .cta-row { flex-wrap: wrap; }
+          .cta-row .btn:first-child { flex: 1; min-width: 0; }
+          .cta-row .btn:nth-child(2) { flex: 1; min-width: 0; }
+          .sticky-bottom { padding: 12px 16px; padding-bottom: calc(12px + env(safe-area-inset-bottom, 0px)); }
+          .pdp-panel h1 { font-size: 26px; }
+          .pdp-price { font-size: 26px; }
+        }
+        @media (max-width: 480px) {
+          .gallery-thumbs { flex-wrap: wrap; }
+          .gallery-thumb { width: 64px; height: 64px; }
+          .trust-badges { grid-template-columns: repeat(3, 1fr); gap: 6px; }
+          .connectivity-pills { gap: 6px; }
+          .conn-pill { padding: 6px 12px; font-size: 11px; }
+          .sticky-bottom { flex-direction: column; align-items: stretch; gap: 10px; }
+          .sticky-bottom > div:first-child { display: flex; justify-content: space-between; align-items: center; }
+          .sticky-bottom > div:last-child { display: flex; gap: 10px; }
+          .sticky-bottom > div:last-child .btn { flex: 1; }
         }
       `}</style>
 

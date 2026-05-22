@@ -4,6 +4,12 @@ import { useEffect, useState, useCallback, Suspense } from 'react'
 import Link from 'next/link'
 import { useSearchParams } from 'next/navigation'
 
+interface ProductImageData {
+  url: string
+  alt?: string | null
+  position?: number
+}
+
 interface Product {
   id: string
   name: string
@@ -19,6 +25,7 @@ interface Product {
   rating?: number
   reviewCount?: number
   category?: { name: string; slug: string } | null
+  images?: ProductImageData[]
 }
 
 type SortOption = 'newest' | 'price-asc' | 'price-desc' | 'popular' | 'rating' | 'name'
@@ -35,11 +42,112 @@ const PRICE_RANGES = [
 const SORT_OPTIONS = [
   { value: 'newest', label: 'Newest' },
   { value: 'popular', label: 'Most Popular' },
-  { value: 'price-asc', label: 'Price: Low to High' },
-  { value: 'price-desc', label: 'Price: High to Low' },
+  { value: 'price-asc', label: 'Price: Low → High' },
+  { value: 'price-desc', label: 'Price: High → Low' },
   { value: 'rating', label: 'Highest Rated' },
   { value: 'name', label: 'A–Z' },
 ]
+
+const CAT_EMOJIS: Record<string, string> = {
+  Electronics: '⚡', Fashion: '👗', Beauty: '✨', Sports: '🏃', Accessories: '💎', 'Home & Living': '🏡',
+}
+
+function ProductImg({ product, size = 40 }: { product: Product; size?: number }) {
+  const img = product.images?.[0]
+  if (img?.url) {
+    return (
+      <img
+        src={img.url}
+        alt={img.alt || product.name}
+        style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+      />
+    )
+  }
+  const emoji = product.category?.name ? (CAT_EMOJIS[product.category.name] || '🛍️') : '🛍️'
+  return (
+    <div className="product-image" style={{ width: '100%', height: '100%' }}>
+      <span style={{ fontFamily: 'system-ui', fontSize: size, display: 'block', marginBottom: 8 }}>{emoji}</span>
+      <span style={{ fontSize: 10 }}>{product.name}</span>
+    </div>
+  )
+}
+
+function FilterPanel({
+  categories,
+  selectedCategories,
+  setSelectedCategories,
+  priceRange,
+  setPriceRange,
+  inStockOnly,
+  setInStockOnly,
+  activeFilters,
+  onClear,
+}: any) {
+  return (
+    <div className="panel" style={{ padding: 24 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 700 }}>Filters</h3>
+        {activeFilters.length > 0 && (
+          <button className="btn-xs btn-g" onClick={onClear}>Clear all</button>
+        )}
+      </div>
+
+      {categories.length > 0 && (
+        <div className="filter-section">
+          <div className="filter-title">Category</div>
+          {categories.map((cat: string) => (
+            <label key={cat} className="filter-option">
+              <input
+                type="checkbox"
+                checked={selectedCategories.includes(cat.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-'))}
+                onChange={() => {
+                  const slug = cat.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')
+                  setSelectedCategories((prev: string[]) =>
+                    prev.includes(slug) ? prev.filter((c: string) => c !== slug) : [...prev, slug]
+                  )
+                }}
+              />
+              {cat}
+            </label>
+          ))}
+        </div>
+      )}
+
+      <div className="filter-section">
+        <div className="filter-title">Price Range</div>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+          {PRICE_RANGES.map(range => (
+            <button
+              key={range.label}
+              className={`price-chip${priceRange?.min === range.min && priceRange?.max === range.max ? ' active' : ''}`}
+              onClick={() =>
+                setPriceRange((prev: any) =>
+                  prev?.min === range.min && prev?.max === range.max
+                    ? null
+                    : { min: range.min, max: range.max }
+                )
+              }
+            >
+              {range.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="filter-section">
+        <div className="filter-title">Availability</div>
+        <label className="filter-option">
+          <input
+            type="checkbox"
+            checked={inStockOnly}
+            onChange={(e) => setInStockOnly(e.target.checked)}
+          />
+          In Stock Only
+        </label>
+      </div>
+    </div>
+  )
+}
 
 function ShopContent() {
   const searchParams = useSearchParams()
@@ -52,7 +160,6 @@ function ShopContent() {
     return cat ? [cat] : []
   })
   const [priceRange, setPriceRange] = useState<{ min: number; max: number } | null>(null)
-  const [selectedColors, setSelectedColors] = useState<string[]>([])
   const [inStockOnly, setInStockOnly] = useState(false)
   const [sort, setSort] = useState<SortOption>('newest')
   const [view, setView] = useState<ViewMode>('grid4')
@@ -62,6 +169,7 @@ function ShopContent() {
   const [toast, setToast] = useState('')
   const [quickView, setQuickView] = useState<Product | null>(null)
   const [compareList, setCompareList] = useState<string[]>([])
+  const [filterDrawerOpen, setFilterDrawerOpen] = useState(false)
 
   const searchQuery = searchParams.get('q') || ''
 
@@ -88,7 +196,6 @@ function ShopContent() {
   const filterAndSort = useCallback(() => {
     let filtered = [...allProducts]
 
-    // Search
     if (searchQuery) {
       const q = searchQuery.toLowerCase()
       filtered = filtered.filter(p =>
@@ -98,12 +205,10 @@ function ShopContent() {
       )
     }
 
-    // Category
     if (selectedCategories.length > 0) {
       filtered = filtered.filter(p => p.category && selectedCategories.includes(p.category.slug))
     }
 
-    // Price
     if (priceRange) {
       filtered = filtered.filter(p => {
         const price = p.salePrice || p.price
@@ -111,39 +216,24 @@ function ShopContent() {
       })
     }
 
-    // Stock
     if (inStockOnly) {
       filtered = filtered.filter(p => p.stock > 0)
     }
 
-    // Sort
     switch (sort) {
-      case 'price-asc':
-        filtered.sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price))
-        break
-      case 'price-desc':
-        filtered.sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price))
-        break
-      case 'rating':
-        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0))
-        break
-      case 'name':
-        filtered.sort((a, b) => a.name.localeCompare(b.name))
-        break
-      case 'popular':
-        filtered.sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0))
-        break
-      default:
-        break
+      case 'price-asc': filtered.sort((a, b) => (a.salePrice || a.price) - (b.salePrice || b.price)); break
+      case 'price-desc': filtered.sort((a, b) => (b.salePrice || b.price) - (a.salePrice || a.price)); break
+      case 'rating': filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0)); break
+      case 'name': filtered.sort((a, b) => a.name.localeCompare(b.name)); break
+      case 'popular': filtered.sort((a, b) => (b.reviewCount || 0) - (a.reviewCount || 0)); break
+      default: break
     }
 
     setProducts(filtered)
     setPage(1)
   }, [allProducts, searchQuery, selectedCategories, priceRange, inStockOnly, sort])
 
-  useEffect(() => {
-    filterAndSort()
-  }, [filterAndSort])
+  useEffect(() => { filterAndSort() }, [filterAndSort])
 
   const paginatedProducts = products.slice((page - 1) * perPage, page * perPage)
   const totalPages = Math.ceil(products.length / perPage)
@@ -189,6 +279,12 @@ function ShopContent() {
   if (priceRange) activeFilters.push(`$${priceRange.min}–${priceRange.max === Infinity ? '∞' : '$' + priceRange.max}`)
   if (inStockOnly) activeFilters.push('In Stock')
 
+  const clearFilters = () => {
+    setSelectedCategories([])
+    setPriceRange(null)
+    setInStockOnly(false)
+  }
+
   return (
     <>
       <style>{`
@@ -231,11 +327,100 @@ function ShopContent() {
         }
         .price-chip:hover { border-color: var(--accent); color: var(--accent); }
         .price-chip.active { background: rgba(255,211,44,0.12); border-color: var(--accent); color: var(--accent); }
+
+        /* Mobile filter button */
+        .mobile-filter-btn {
+          display: none;
+          align-items: center;
+          gap: 8px;
+          padding: 10px 18px;
+          border-radius: 999px;
+          background: rgba(255,255,255,0.07);
+          border: 1px solid var(--border);
+          color: var(--text-secondary);
+          font-size: 13px;
+          font-weight: 600;
+          cursor: pointer;
+          font-family: inherit;
+          transition: all 0.2s;
+          flex-shrink: 0;
+        }
+        .mobile-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+        [data-theme="light"] .mobile-filter-btn { background: rgba(0,0,0,0.04); color: rgba(0,0,0,0.65); }
+
+        /* Filter drawer overlay */
+        .filter-drawer-overlay {
+          display: none;
+          position: fixed;
+          inset: 0;
+          background: rgba(0,0,0,0.6);
+          backdrop-filter: blur(4px);
+          z-index: 300;
+          animation: fadeIn 0.2s ease;
+        }
+        .filter-drawer-overlay.open { display: block; }
+
+        /* Filter drawer */
+        .filter-drawer {
+          position: fixed;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          z-index: 301;
+          max-height: 80vh;
+          overflow-y: auto;
+          border-radius: 28px 28px 0 0;
+          padding: 8px 0 32px;
+          background: linear-gradient(180deg, rgba(20,20,22,0.98), rgba(10,10,11,0.98));
+          backdrop-filter: blur(40px);
+          -webkit-backdrop-filter: blur(40px);
+          border-top: 1px solid var(--glass-border);
+          box-shadow: 0 -24px 64px rgba(0,0,0,0.4);
+          transform: translateY(100%);
+          transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .filter-drawer.open { transform: translateY(0); }
+        [data-theme="light"] .filter-drawer {
+          background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(244,242,238,0.98));
+          border-color: rgba(0,0,0,0.08);
+          box-shadow: 0 -16px 40px rgba(0,0,0,0.12);
+        }
+        .filter-drawer-handle {
+          width: 40px;
+          height: 4px;
+          background: rgba(255,255,255,0.2);
+          border-radius: 2px;
+          margin: 12px auto 24px;
+          flex-shrink: 0;
+        }
+        [data-theme="light"] .filter-drawer-handle { background: rgba(0,0,0,0.15); }
+        .filter-drawer-inner { padding: 0 24px; }
+        .filter-drawer-header {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          margin-bottom: 24px;
+        }
+        .filter-drawer-close {
+          width: 32px;
+          height: 32px;
+          background: rgba(255,255,255,0.08);
+          border: 1px solid var(--border);
+          border-radius: 50%;
+          cursor: pointer;
+          color: var(--text-secondary);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          font-size: 18px;
+        }
+        [data-theme="light"] .filter-drawer-close { background: rgba(0,0,0,0.05); }
+
         .sort-bar {
           display: flex;
           align-items: center;
-          gap: 16px;
-          padding: 16px 20px;
+          gap: 12px;
+          padding: 12px 16px;
           border-radius: 16px;
           margin-bottom: 24px;
           flex-wrap: wrap;
@@ -243,7 +428,7 @@ function ShopContent() {
         .sort-count { font-size: 13px; color: var(--text-muted); white-space: nowrap; }
         .sort-options { display: flex; gap: 6px; flex-wrap: wrap; flex: 1; }
         .sort-btn {
-          padding: 6px 14px;
+          padding: 6px 12px;
           border-radius: 999px;
           font-size: 12px;
           font-weight: 500;
@@ -304,7 +489,7 @@ function ShopContent() {
         .list-card:hover { transform: translateX(4px); }
         .list-img { width: 120px; height: 120px; border-radius: 12px; overflow: hidden; flex-shrink: 0; }
 
-        .pagination { display: flex; gap: 8px; justify-content: center; margin-top: 48px; }
+        .pagination { display: flex; gap: 8px; justify-content: center; margin-top: 48px; flex-wrap: wrap; }
         .page-btn {
           width: 40px;
           height: 40px;
@@ -361,17 +546,37 @@ function ShopContent() {
         }
         .qty-btn:hover { border-color: var(--accent); color: var(--accent); }
 
+        /* Product card real image */
+        .product-card .product-image-wrapper img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          border-radius: var(--r-md);
+        }
+
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 1024px) {
-          .shop-layout { grid-template-columns: 1fr; }
-          .filter-sidebar { position: static; display: none; }
+          .shop-layout { grid-template-columns: 1fr; gap: 0; }
+          .filter-sidebar { display: none; }
+          .mobile-filter-btn { display: inline-flex; }
           .products-grid-4 { grid-template-columns: repeat(3, 1fr); }
         }
         @media (max-width: 768px) {
           .shop-layout { padding: 100px 0 60px; }
-          .products-grid-4, .products-grid-3 { grid-template-columns: repeat(2, 1fr); }
+          .products-grid-4, .products-grid-3 { grid-template-columns: repeat(2, 1fr); gap: 14px; }
+          .sort-options { display: none; }
+          .sort-bar { justify-content: space-between; }
+          .list-card { grid-template-columns: 80px 1fr; }
+          .list-card > div:last-child { display: none; }
+          .list-img { width: 80px; height: 80px; }
+          .qv-modal { grid-template-columns: 1fr; padding: 20px; gap: 20px; }
+          .qv-img { max-height: 240px; }
         }
         @media (max-width: 480px) {
-          .products-grid-4, .products-grid-3 { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+          .products-grid-4, .products-grid-3 { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+          .sort-bar { padding: 10px 12px; }
+          .compare-bar { padding: 12px 16px; flex-wrap: wrap; gap: 10px; }
         }
       `}</style>
 
@@ -388,84 +593,19 @@ function ShopContent() {
         </div>
 
         <div className="shop-layout" style={{ paddingTop: 0 }}>
-          {/* Sidebar */}
+          {/* Desktop Sidebar */}
           <aside className="filter-sidebar">
-            <div className="panel" style={{ padding: 24 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-                <h3 style={{ fontSize: 14, fontWeight: 700 }}>Filters</h3>
-                {activeFilters.length > 0 && (
-                  <button
-                    className="btn-xs btn-g"
-                    onClick={() => {
-                      setSelectedCategories([])
-                      setPriceRange(null)
-                      setInStockOnly(false)
-                    }}
-                  >
-                    Clear all
-                  </button>
-                )}
-              </div>
-
-              {/* Category filter */}
-              {categories.length > 0 && (
-                <div className="filter-section">
-                  <div className="filter-title">Category</div>
-                  {categories.map(cat => (
-                    <label key={cat} className="filter-option">
-                      <input
-                        type="checkbox"
-                        checked={selectedCategories.includes(cat.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-'))}
-                        onChange={() => {
-                          const slug = cat.toLowerCase().replace(/ & /g, '-').replace(/ /g, '-')
-                          setSelectedCategories(prev =>
-                            prev.includes(slug)
-                              ? prev.filter(c => c !== slug)
-                              : [...prev, slug]
-                          )
-                        }}
-                      />
-                      {cat}
-                    </label>
-                  ))}
-                </div>
-              )}
-
-              {/* Price range */}
-              <div className="filter-section">
-                <div className="filter-title">Price Range</div>
-                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
-                  {PRICE_RANGES.map(range => (
-                    <button
-                      key={range.label}
-                      className={`price-chip${priceRange?.min === range.min && priceRange?.max === range.max ? ' active' : ''}`}
-                      onClick={() =>
-                        setPriceRange(prev =>
-                          prev?.min === range.min && prev?.max === range.max
-                            ? null
-                            : { min: range.min, max: range.max }
-                        )
-                      }
-                    >
-                      {range.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Availability */}
-              <div className="filter-section">
-                <div className="filter-title">Availability</div>
-                <label className="filter-option">
-                  <input
-                    type="checkbox"
-                    checked={inStockOnly}
-                    onChange={e => setInStockOnly(e.target.checked)}
-                  />
-                  In Stock Only
-                </label>
-              </div>
-            </div>
+            <FilterPanel
+              categories={categories}
+              selectedCategories={selectedCategories}
+              setSelectedCategories={setSelectedCategories}
+              priceRange={priceRange}
+              setPriceRange={setPriceRange}
+              inStockOnly={inStockOnly}
+              setInStockOnly={setInStockOnly}
+              activeFilters={activeFilters}
+              onClear={clearFilters}
+            />
           </aside>
 
           {/* Main content */}
@@ -489,6 +629,20 @@ function ShopContent() {
             {/* Sort bar */}
             <div className="sort-bar glass">
               <span className="sort-count">{products.length} products</span>
+
+              {/* Mobile filter button */}
+              <button
+                className="mobile-filter-btn"
+                onClick={() => setFilterDrawerOpen(true)}
+              >
+                <svg width="14" height="14" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                  <line x1="4" y1="6" x2="20" y2="6"/>
+                  <line x1="8" y1="12" x2="16" y2="12"/>
+                  <line x1="11" y1="18" x2="13" y2="18"/>
+                </svg>
+                Filters{activeFilters.length > 0 ? ` (${activeFilters.length})` : ''}
+              </button>
+
               <div className="sort-options">
                 {SORT_OPTIONS.map(opt => (
                   <button
@@ -500,12 +654,13 @@ function ShopContent() {
                   </button>
                 ))}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <select
                   value={perPage}
                   onChange={e => setPerPage(Number(e.target.value))}
                   className="f-select"
-                  style={{ width: 80, padding: '6px 10px' }}
+                  style={{ width: 72, padding: '6px 8px' }}
                 >
                   <option value={12}>12</option>
                   <option value={24}>24</option>
@@ -553,13 +708,7 @@ function ShopContent() {
                     {paginatedProducts.map(product => (
                       <Link key={product.id} href={`/products/${product.slug}`} className="list-card glass">
                         <div className="list-img">
-                          <div className="product-image" style={{ width: '100%', height: '100%' }}>
-                            <span style={{ fontSize: 40 }}>
-                              {product.category?.name === 'Electronics' ? '⚡' :
-                               product.category?.name === 'Fashion' ? '👗' :
-                               product.category?.name === 'Beauty' ? '✨' : '🛍️'}
-                            </span>
-                          </div>
+                          <ProductImg product={product} size={40} />
                         </div>
                         <div>
                           <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 6 }}>
@@ -580,16 +729,7 @@ function ShopContent() {
                     {paginatedProducts.map((product) => (
                       <Link key={product.id} href={`/products/${product.slug}`} className="product-card glass">
                         <div className="product-image-wrapper">
-                          <div className="product-image">
-                            <span style={{ fontFamily: 'system-ui', fontSize: 40, display: 'block', marginBottom: 8 }}>
-                              {product.category?.name === 'Electronics' ? '⚡' :
-                               product.category?.name === 'Fashion' ? '👗' :
-                               product.category?.name === 'Beauty' ? '✨' :
-                               product.category?.name === 'Sports' ? '🏃' :
-                               product.category?.name === 'Accessories' ? '💎' : '🛍️'}
-                            </span>
-                            <span style={{ fontSize: 10 }}>{product.name}</span>
-                          </div>
+                          <ProductImg product={product} size={40} />
                           {product.isBest && <span className="product-badge badge-best">Bestseller</span>}
                           {product.isNew && !product.isBest && <span className="product-badge badge-new">New</span>}
                           {product.stock === 0 && <span className="product-badge badge-out">Sold Out</span>}
@@ -652,9 +792,7 @@ function ShopContent() {
                 {/* Pagination */}
                 {totalPages > 1 && (
                   <div className="pagination">
-                    <button className="page-btn" onClick={() => setPage(p => p - 1)} disabled={page === 1}>
-                      ‹
-                    </button>
+                    <button className="page-btn" onClick={() => setPage(p => p - 1)} disabled={page === 1}>‹</button>
                     {Array.from({ length: Math.min(totalPages, 7) }, (_, i) => {
                       const pg = i + 1
                       return (
@@ -667,14 +805,42 @@ function ShopContent() {
                         </button>
                       )
                     })}
-                    <button className="page-btn" onClick={() => setPage(p => p + 1)} disabled={page === totalPages}>
-                      ›
-                    </button>
+                    <button className="page-btn" onClick={() => setPage(p => p + 1)} disabled={page === totalPages}>›</button>
                   </div>
                 )}
               </>
             )}
           </main>
+        </div>
+      </div>
+
+      {/* Mobile Filter Drawer */}
+      <div className={`filter-drawer-overlay${filterDrawerOpen ? ' open' : ''}`} onClick={() => setFilterDrawerOpen(false)} />
+      <div className={`filter-drawer${filterDrawerOpen ? ' open' : ''}`}>
+        <div className="filter-drawer-handle" />
+        <div className="filter-drawer-inner">
+          <div className="filter-drawer-header">
+            <h3 style={{ fontSize: 16, fontWeight: 700 }}>Filters</h3>
+            <button className="filter-drawer-close" onClick={() => setFilterDrawerOpen(false)}>×</button>
+          </div>
+          <FilterPanel
+            categories={categories}
+            selectedCategories={selectedCategories}
+            setSelectedCategories={setSelectedCategories}
+            priceRange={priceRange}
+            setPriceRange={setPriceRange}
+            inStockOnly={inStockOnly}
+            setInStockOnly={setInStockOnly}
+            activeFilters={activeFilters}
+            onClear={clearFilters}
+          />
+          <button
+            className="btn btn-primary"
+            style={{ width: '100%', marginTop: 8 }}
+            onClick={() => setFilterDrawerOpen(false)}
+          >
+            Show {products.length} Results
+          </button>
         </div>
       </div>
 
@@ -684,18 +850,11 @@ function ShopContent() {
           <div className="modal-content glass" onClick={e => e.stopPropagation()}>
             <button
               onClick={() => setQuickView(null)}
-              style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.1)', border: '1px solid var(--border)', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1 }}
-            >
-              ×
-            </button>
+              style={{ position: 'absolute', top: 16, right: 16, background: 'rgba(255,255,255,0.1)', border: '1px solid var(--border)', borderRadius: '50%', width: 32, height: 32, cursor: 'pointer', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1, fontSize: 18 }}
+            >×</button>
             <div className="qv-modal">
               <div className="qv-img">
-                <div className="product-image" style={{ height: '100%', width: '100%', minHeight: 300, fontSize: 80, flexDirection: 'column', gap: 12 }}>
-                  <span>
-                    {quickView.category?.name === 'Electronics' ? '⚡' :
-                     quickView.category?.name === 'Fashion' ? '👗' : '🛍️'}
-                  </span>
-                </div>
+                <ProductImg product={quickView} size={80} />
               </div>
               <div style={{ padding: '8px 0' }}>
                 <div style={{ fontSize: 11, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 8 }}>

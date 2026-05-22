@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { useEffect, useRef, useState } from 'react'
+import { ProductImage } from '@/components/ProductImage'
 
 const CATEGORY_EMOJIS: Record<string, string> = {
   Electronics: '⚡',
@@ -21,6 +22,12 @@ const CATEGORY_GRADIENTS: Record<string, string> = {
   Sports: 'linear-gradient(135deg, rgba(52,211,153,0.15), rgba(96,165,250,0.12))',
 }
 
+interface ProductImageData {
+  url: string
+  alt?: string | null
+  position?: number
+}
+
 interface Product {
   id: string
   name: string
@@ -31,6 +38,8 @@ interface Product {
   isBest?: boolean
   isNew?: boolean
   stock?: number
+  images?: ProductImageData[]
+  category?: { name: string; slug: string } | null
 }
 
 const FALLBACK_CATEGORIES = [
@@ -70,7 +79,6 @@ export function HomepageClient({
   const products = initialProducts.length > 0 ? initialProducts : FALLBACK_PRODUCTS
   const categories = initialCategories.length > 0 ? initialCategories : FALLBACK_CATEGORIES
 
-  const heroRef = useRef<HTMLDivElement>(null)
   const productFrameRef = useRef<HTMLDivElement>(null)
   const [wishlisted, setWishlisted] = useState<Set<string>>(new Set())
   const [toastVisible, setToastVisible] = useState(false)
@@ -211,6 +219,7 @@ export function HomepageClient({
         .hero-ctas {
           display: flex;
           gap: 16px;
+          flex-wrap: wrap;
           opacity: 0;
           animation: fadeInUp 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) 0.4s forwards;
         }
@@ -324,6 +333,16 @@ export function HomepageClient({
           gap: 24px;
         }
 
+        /* Product card image wrapper — real image support */
+        .hp-product-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          border-radius: var(--r-md);
+        }
+
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 1200px) {
           .hero-title { font-size: 64px; line-height: 68px; }
         }
@@ -334,18 +353,38 @@ export function HomepageClient({
           .hero-right { height: 400px; }
           .category-grid { grid-template-columns: repeat(2, 1fr); }
           .product-grid { grid-template-columns: repeat(3, 1fr); }
+          .trust-item { padding: 16px 24px; }
         }
         @media (max-width: 768px) {
-          .hero { padding: 140px 0 60px; }
-          .hero-title { font-size: 40px; line-height: 44px; }
-          .hero-ctas { flex-direction: column; }
-          .category-grid { grid-template-columns: 1fr; }
-          .product-grid { grid-template-columns: repeat(2, 1fr); }
-          .trust-items { flex-direction: column; align-items: center; }
+          .hero { padding: 120px 0 60px; }
+          .hero-title { font-size: 40px !important; line-height: 46px !important; }
+          .hero-desc { font-size: 16px; }
+          .hero-ctas { flex-direction: column; gap: 12px; }
+          .hero-ctas .btn { width: 100%; justify-content: center; }
+          .hero-right { height: 320px; }
+          .category-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+          .category-card { height: 220px; }
+          .category-name { font-size: 16px; }
+          .product-grid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+          .trust-strip { padding: 40px 0; }
+          .trust-items { gap: 12px; }
+          .trust-item { padding: 14px 20px; font-size: 13px; }
         }
         @media (max-width: 480px) {
-          .hero-title { font-size: 32px !important; line-height: 38px !important; }
+          .hero { padding: 100px 0 48px; }
+          .hero-title { font-size: 30px !important; line-height: 36px !important; }
+          .hero-desc { font-size: 15px; margin-bottom: 28px; }
+          .hero-right { height: 260px; }
+          .hero-product-frame { padding: 20px; border-radius: 24px; }
+          .category-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+          .category-card { height: 180px; }
+          .category-image { font-size: 48px; }
+          .category-overlay { padding: 16px; }
+          .category-name { font-size: 14px; }
           .product-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+          .trust-item { padding: 12px 16px; border-radius: 16px; }
+          .trust-items { flex-direction: column; align-items: stretch; }
+          .trust-item { justify-content: center; }
         }
       `}</style>
 
@@ -472,12 +511,20 @@ export function HomepageClient({
                 style={{ transitionDelay: `${i * 0.05}s` }}
               >
                 <div className="product-image-wrapper">
-                  <div className="product-image">
-                    <span style={{ fontFamily: 'system-ui', fontSize: 32, display: 'block', marginBottom: 8 }}>
-                      {['⚡','👜','⌚','🕶️','💡','👕','☕','🧘'][i % 8]}
-                    </span>
-                    <span style={{ fontSize: 11 }}>{product.name}</span>
-                  </div>
+                  {product.images?.[0]?.url ? (
+                    <img
+                      src={product.images[0].url}
+                      alt={product.images[0].alt || product.name}
+                      className="hp-product-img"
+                    />
+                  ) : (
+                    <div className="product-image">
+                      <span style={{ fontFamily: 'system-ui', fontSize: 32, display: 'block', marginBottom: 8 }}>
+                        {product.category?.name ? (CATEGORY_EMOJIS[product.category.name] || '🛍️') : ['⚡','👜','⌚','🕶️','💡','👕','☕','🧘'][i % 8]}
+                      </span>
+                      <span style={{ fontSize: 11 }}>{product.name}</span>
+                    </div>
+                  )}
                   {product.isBest && <span className="product-badge badge-best">Bestseller</span>}
                   {product.isNew && !product.isBest && <span className="product-badge badge-new">New</span>}
                   <button

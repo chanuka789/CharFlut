@@ -405,7 +405,7 @@ export function Header() {
           box-shadow: 0 16px 40px rgba(0,0,0,0.12);
         }
 
-        .lg-mobile-menu.open { display: flex; }
+        .lg-mobile-menu.open { display: flex; overflow-y: auto; max-height: calc(100vh - 90px); -webkit-overflow-scrolling: touch; }
 
         .lg-mobile-menu a {
           padding: 14px 18px;
@@ -429,9 +429,17 @@ export function Header() {
         }
 
         @media (max-width: 520px) {
-          .lg-hdr { padding: 6px 6px 6px 18px; gap: 6px; }
-          .lg-logo { font-size: 15px; }
+          .lg-hdr { padding: 6px 6px 6px 14px; gap: 6px; }
+          .lg-logo { font-size: 14px; min-width: 0; }
           .lg-search { display: none; }
+          .lg-ibtn { width: 32px; height: 32px; }
+          .lg-user-avatar { width: 32px; height: 32px; font-size: 11px; }
+          .lg-theme-btn { width: 32px; height: 32px; }
+        }
+        @media (max-width: 360px) {
+          .lg-header-wrapper { width: calc(100% - 16px); top: 8px; }
+          .lg-hdr { padding: 6px 6px 6px 12px; }
+          .lg-logo { font-size: 13px; }
         }
       `}</style>
 

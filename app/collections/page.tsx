@@ -138,8 +138,8 @@ export default async function CollectionsPage() {
         .collection-name { font-size: 18px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px; }
         [data-theme="light"] .collection-name { color: #0a0a0b !important; }
         .collection-count { font-size: 12px; color: var(--text-muted); }
-
-        .tag-pills { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 48px; }
+        .tag-pills { display: flex; gap: 8px; margin-bottom: 48px; overflow-x: auto; -webkit-overflow-scrolling: touch; justify-content: flex-start; scrollbar-width: none; padding-bottom: 4px; }
+        .tag-pills::-webkit-scrollbar { display: none; }
         .tag-pill {
           padding: 7px 18px;
           border-radius: 999px;
@@ -160,8 +160,20 @@ export default async function CollectionsPage() {
           .collections-grid { grid-template-columns: repeat(2, 1fr); }
         }
         @media (max-width: 768px) {
-          .collections-grid { grid-template-columns: 1fr; }
+          .collections-hero { padding: 110px 0 40px; }
+          .collections-grid { grid-template-columns: repeat(2, 1fr); gap: 14px; }
           .featured-card { height: 280px; }
+          .featured-title { font-size: 22px; }
+          .featured-overlay { padding: 20px; }
+          .tag-pills { justify-content: flex-start; margin-bottom: 32px; }
+        }
+        @media (max-width: 480px) {
+          .collections-hero { padding: 100px 0 32px; }
+          .collections-grid { grid-template-columns: 1fr; gap: 14px; }
+          .featured-card { height: 240px; }
+          .featured-title { font-size: 18px; }
+          .collection-card-image { height: 160px; font-size: 40px; }
+          .collection-name { font-size: 15px; }
         }
       `}</style>
 
