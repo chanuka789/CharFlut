@@ -14,8 +14,16 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('q') || searchParams.get('search')
     const slug = searchParams.get('slug')
     const sort = searchParams.get('sort') || 'newest'
+    const trash = searchParams.get('trash') === 'true'
 
-    const where: any = {}
+    const where: any = trash ? { deletedAt: { not: null } } : { deletedAt: null }
+
+    if (trash) {
+      const session = await getServerSession(authOptions)
+      if (!session || session.user.role !== 'ADMIN') {
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+      }
+    }
 
     if (published === 'true') where.published = true
     if (featured === 'true') where.featured = true

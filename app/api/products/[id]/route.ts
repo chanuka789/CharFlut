@@ -21,7 +21,7 @@ export async function GET(req: NextRequest, { params }: { params: { id: string }
       },
     })
 
-    if (!product) {
+    if (!product || product.deletedAt) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 
@@ -83,6 +83,31 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
+export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  try {
+    const session = await getServerSession(authOptions)
+    if (!session || session.user.role !== 'ADMIN') {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const body = await req.json().catch(() => ({}))
+    if (body.action !== 'restore') {
+      return NextResponse.json({ error: 'Unsupported action' }, { status: 400 })
+    }
+
+    const product = await prisma.product.update({
+      where: { id: params.id },
+      data: { deletedAt: null },
+      include: { category: true },
+    })
+
+    return NextResponse.json(product)
+  } catch (error) {
+    console.error('Product PATCH error:', error)
+    return NextResponse.json({ error: 'Failed to update product' }, { status: 500 })
+  }
+}
+
 export async function DELETE(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const session = await getServerSession(authOptions)
@@ -90,7 +115,17 @@ export async function DELETE(req: NextRequest, { params }: { params: { id: strin
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
-    await prisma.product.delete({ where: { id: params.id } })
+    const { searchParams } = new URL(req.url)
+    const permanent = searchParams.get('permanent') === 'true'
+
+    if (permanent) {
+      await prisma.product.delete({ where: { id: params.id } })
+    } else {
+      await prisma.product.update({
+        where: { id: params.id },
+        data: { deletedAt: new Date(), published: false },
+      })
+    }
 
     return NextResponse.json({ success: true })
   } catch (error) {

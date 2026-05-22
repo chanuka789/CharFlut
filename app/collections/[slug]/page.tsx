@@ -10,6 +10,7 @@ async function getCollection(slug: string) {
       where: { slug },
       include: {
         products: {
+          where: { product: { deletedAt: null } },
           include: {
             product: {
               include: {

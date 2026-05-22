@@ -20,6 +20,10 @@ const NAV_SECTIONS = [
         icon: <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
       },
       {
+        id: 'trash', label: 'Trash', href: '/admin/products/trash',
+        icon: <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6 18.2 19.1A2 2 0 0 1 16.2 21H7.8A2 2 0 0 1 5.8 19.1L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg>
+      },
+      {
         id: 'collections', label: 'Collections', href: '/admin/collections',
         icon: <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
       },
@@ -84,16 +88,22 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             {NAV_SECTIONS.map(section => (
               <div key={section.label}>
                 <div className="nav-section-label">{section.label}</div>
-                {section.items.map(item => (
-                  <Link
-                    key={item.id}
-                    href={item.href}
-                    className={`nav-item${pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href)) ? ' active' : ''}`}
-                  >
-                    {item.icon}
-                    <span className="nav-item-label">{item.label}</span>
-                  </Link>
-                ))}
+                {section.items.map(item => {
+                  const isActive = item.id === 'products'
+                    ? pathname === item.href || (pathname.startsWith('/admin/products/') && !pathname.startsWith('/admin/products/trash'))
+                    : pathname === item.href || (item.href !== '/admin' && pathname.startsWith(item.href))
+
+                  return (
+                    <Link
+                      key={item.id}
+                      href={item.href}
+                      className={`nav-item${isActive ? ' active' : ''}`}
+                    >
+                      {item.icon}
+                      <span className="nav-item-label">{item.label}</span>
+                    </Link>
+                  )
+                })}
               </div>
             ))}
 

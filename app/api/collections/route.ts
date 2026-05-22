@@ -23,6 +23,7 @@ export async function GET(req: NextRequest) {
         include: {
           _count: { select: { products: true } },
           products: {
+            where: { product: { deletedAt: null } },
             include: {
               product: {
                 include: {

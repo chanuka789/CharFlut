@@ -60,7 +60,7 @@ export async function POST(req: NextRequest) {
           where: { id: item.id },
         })
 
-        if (!product || !product.published) {
+        if (!product || !product.published || product.deletedAt) {
           throw new Error(`Product "${item.name}" is no longer available.`)
         }
 

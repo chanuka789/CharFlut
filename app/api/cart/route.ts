@@ -37,10 +37,10 @@ export async function POST(req: NextRequest) {
 
     const product = await prisma.product.findUnique({
       where: { id: productId },
-      select: { id: true, name: true, price: true, salePrice: true, stock: true, published: true },
+      select: { id: true, name: true, price: true, salePrice: true, stock: true, published: true, deletedAt: true },
     })
 
-    if (!product || !product.published) {
+    if (!product || !product.published || product.deletedAt) {
       return NextResponse.json({ error: 'Product not found' }, { status: 404 })
     }
 

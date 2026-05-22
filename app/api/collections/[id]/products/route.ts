@@ -6,7 +6,7 @@ import { prisma } from '@/lib/prisma'
 export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const products = await prisma.collectionProduct.findMany({
-      where: { collectionId: params.id },
+      where: { collectionId: params.id, product: { deletedAt: null } },
       include: {
         product: {
           include: { images: { orderBy: { position: 'asc' }, take: 1 } },

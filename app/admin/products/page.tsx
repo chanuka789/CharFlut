@@ -23,6 +23,7 @@ export default function AdminProductsPage() {
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
   const [selected, setSelected] = useState<Set<string>>(new Set())
+  const [permanentDelete, setPermanentDelete] = useState(false)
   const [page, setPage] = useState(1)
   const [toast, setToast] = useState('')
   const perPage = 15
@@ -78,12 +79,15 @@ export default function AdminProductsPage() {
   }
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this product?')) return
+    const message = permanentDelete
+      ? 'Permanently delete this product? This cannot be undone.'
+      : 'Move this product to trash?'
+    if (!confirm(message)) return
     try {
-      const res = await fetch(`/api/products/${id}`, { method: 'DELETE' })
+      const res = await fetch(`/api/products/${id}${permanentDelete ? '?permanent=true' : ''}`, { method: 'DELETE' })
       if (res.ok) {
         setProducts(prev => prev.filter(p => p.id !== id))
-        showToast('Product deleted')
+        showToast(permanentDelete ? 'Product permanently deleted' : 'Product moved to trash')
       }
     } catch {
       showToast('Failed to delete product')
@@ -91,13 +95,16 @@ export default function AdminProductsPage() {
   }
 
   const handleBulkDelete = async () => {
-    if (!confirm(`Delete ${selected.size} products?`)) return
+    const message = permanentDelete
+      ? `Permanently delete ${selected.size} products? This cannot be undone.`
+      : `Move ${selected.size} products to trash?`
+    if (!confirm(message)) return
     for (const id of Array.from(selected)) {
-      await fetch(`/api/products/${id}`, { method: 'DELETE' })
+      await fetch(`/api/products/${id}${permanentDelete ? '?permanent=true' : ''}`, { method: 'DELETE' })
     }
     setProducts(prev => prev.filter(p => !selected.has(p.id)))
     setSelected(new Set())
-    showToast(`${selected.size} products deleted`)
+    showToast(permanentDelete ? `${selected.size} products permanently deleted` : `${selected.size} products moved to trash`)
   }
 
   return (
@@ -139,9 +146,19 @@ export default function AdminProductsPage() {
           <p style={{ fontSize: 13, color: 'var(--text-muted)', marginTop: 4 }}>{products.length} total products</p>
         </div>
         <div style={{ display: 'flex', gap: 10 }}>
+          <label style={{ display: 'flex', alignItems: 'center', gap: 8, fontSize: 12, color: 'var(--text-muted)' }}>
+            <input
+              type="checkbox"
+              checked={permanentDelete}
+              onChange={e => setPermanentDelete(e.target.checked)}
+              style={{ accentColor: 'var(--danger)' }}
+            />
+            Permanent delete
+          </label>
+          <Link href="/admin/products/trash" className="btn-g btn-sm">Trash</Link>
           {selected.size > 0 && (
             <button className="btn-d btn-sm" onClick={handleBulkDelete}>
-              Delete {selected.size}
+              {permanentDelete ? 'Delete forever' : 'Move to trash'} {selected.size}
             </button>
           )}
           <Link href="/admin/products/new" className="btn-p">+ Add Product</Link>

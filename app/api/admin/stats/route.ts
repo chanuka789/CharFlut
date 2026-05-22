@@ -36,7 +36,7 @@ export async function GET(req: NextRequest) {
       }),
       prisma.user.count({ where: { role: 'CUSTOMER', createdAt: { gte: monthStart } } }),
       prisma.user.count({ where: { role: 'CUSTOMER', createdAt: { gte: lastMonthStart, lt: monthStart } } }),
-      prisma.product.count(),
+      prisma.product.count({ where: { deletedAt: null } }),
       prisma.collection.count(),
       prisma.order.findMany({
         take: 5,
@@ -50,7 +50,7 @@ export async function GET(req: NextRequest) {
         },
       }),
       prisma.product.findMany({
-        where: { stock: { lt: 5 }, published: true },
+        where: { stock: { lt: 5 }, published: true, deletedAt: null },
         select: { id: true, name: true, stock: true, sku: true },
         orderBy: { stock: 'asc' },
         take: 8,
