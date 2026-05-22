@@ -208,6 +208,9 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
             inset 0 1px 0 rgba(255, 255, 255, 0.15);
           transition: all 0.3s var(--ease);
           background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
+          display: flex;
+          align-items: center;
+          justify-content: center;
         }
 
         .gallery-main:hover {
@@ -231,6 +234,44 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
           box-shadow: 
             0 25px 50px rgba(0, 0, 0, 0.08),
             0 0 20px rgba(181, 144, 30, 0.08);
+        }
+
+        .gallery-main-bg {
+          position: absolute;
+          inset: 0;
+          background-size: cover;
+          background-position: center;
+          filter: blur(24px) brightness(0.45);
+          opacity: 0.45;
+          z-index: 1;
+          pointer-events: none;
+          transition: background-image 0.4s var(--ease);
+        }
+        
+        [data-theme="light"] .gallery-main-bg {
+          filter: blur(24px) brightness(0.95);
+          opacity: 0.22;
+        }
+
+        .gallery-main-img {
+          position: relative;
+          z-index: 2;
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
+          transition: transform 0.5s var(--spring);
+        }
+
+        .gallery-main:hover .gallery-main-img {
+          transform: scale(1.03);
+        }
+
+        .gallery-thumb-img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          display: block;
         }
 
         .gallery-main-placeholder {
@@ -704,17 +745,23 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         
         @media (max-width: 768px) {
           .pdp-layout {
-            padding: 100px 12px 60px;
+            padding: 84px 12px 60px;
             gap: 24px;
           }
           
-          /* Gallery layout optimized: square box to display images with absolute precision */
+          /* Gallery layout optimized for mobile: viewport constrained height, contained image, blurred backdrop */
           .gallery-main {
             width: 100%;
-            height: auto;
-            aspect-ratio: 1 / 1;
+            height: 42vh;
+            max-height: 420px;
+            min-height: 280px;
+            aspect-ratio: auto;
             border-radius: 24px;
             margin-bottom: 12px;
+          }
+
+          .gallery-main-img {
+            object-fit: contain;
           }
 
           .gallery-thumbs {
@@ -834,7 +881,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
         @media (max-width: 480px) {
           .pdp-layout {
-            padding: 90px 8px 60px;
+            padding: 78px 8px 60px;
             gap: 16px;
           }
           
@@ -935,11 +982,14 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
           <div className="gallery">
             <div className="gallery-main glass" onClick={() => p.images?.length > 0 && setLightboxOpen(true)}>
               {p.images && p.images.length > 0 ? (
-                <img
-                  src={p.images[Math.min(activeImage, p.images.length - 1)]?.url}
-                  alt={p.images[Math.min(activeImage, p.images.length - 1)]?.alt || p.name}
-                  style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-                />
+                <>
+                  <div className="gallery-main-bg" style={{ backgroundImage: `url(${p.images[Math.min(activeImage, p.images.length - 1)]?.url})` }} />
+                  <img
+                    src={p.images[Math.min(activeImage, p.images.length - 1)]?.url}
+                    alt={p.images[Math.min(activeImage, p.images.length - 1)]?.alt || p.name}
+                    className="gallery-main-img"
+                  />
+                </>
               ) : (
                 <div className="gallery-main-placeholder">
                   <span>{p.category?.name === 'Electronics' ? '⚡' : p.category?.name === 'Fashion' ? '👗' : '🛍️'}</span>
@@ -955,7 +1005,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
                     className={`gallery-thumb${activeImage === i ? ' active' : ''}`}
                     onClick={() => setActiveImage(i)}
                   >
-                    <img src={img.url} alt={img.alt || p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                    <img src={img.url} alt={img.alt || p.name} className="gallery-thumb-img" />
                   </div>
                 ))}
               </div>
