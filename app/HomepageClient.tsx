@@ -277,6 +277,14 @@ export function HomepageClient({
         }
         .trust-icon { width: 20px; height: 20px; color: var(--accent-primary); flex-shrink: 0; }
 
+        .about-stats-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 24px;
+          max-width: 800px;
+          margin: 0 auto;
+        }
+
         .category-grid {
           display: grid;
           grid-template-columns: repeat(3, 1fr);
@@ -369,6 +377,7 @@ export function HomepageClient({
           .trust-strip { padding: 40px 0; }
           .trust-items { gap: 12px; }
           .trust-item { padding: 14px 20px; font-size: 13px; }
+          .about-stats-grid { gap: 16px; }
         }
         @media (max-width: 480px) {
           .hero { padding: 100px 0 48px; }
@@ -385,6 +394,7 @@ export function HomepageClient({
           .trust-item { padding: 12px 16px; border-radius: 16px; }
           .trust-items { flex-direction: column; align-items: stretch; }
           .trust-item { justify-content: center; }
+          .about-stats-grid { grid-template-columns: 1fr !important; gap: 12px; }
         }
       ` }} />
 
@@ -594,7 +604,7 @@ export function HomepageClient({
               beauty and function are inseparable. Our liquid glass design system creates an
               experience unlike any other.
             </p>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 24, maxWidth: 800, margin: '0 auto' }}>
+            <div className="about-stats-grid">
               {[
                 { number: '24K+', label: 'Happy Customers' },
                 { number: '1,200+', label: 'Products' },

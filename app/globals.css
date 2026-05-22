@@ -1340,3 +1340,18 @@ a {
   }
 }
 
+/* Always-visible Quick Add button on touch/mobile screens */
+@media (max-width: 768px) {
+  .product-quick-add {
+    opacity: 1 !important;
+    transform: none !important;
+    margin-top: 12px !important;
+    position: relative !important;
+    display: inline-flex !important;
+    justify-content: center;
+    align-items: center;
+    pointer-events: auto !important;
+  }
+}
+
+

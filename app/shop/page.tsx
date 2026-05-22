@@ -442,6 +442,42 @@ function ShopContent() {
         }
         .sort-btn:hover { border-color: rgba(255,255,255,0.3); color: var(--text-primary); }
         .sort-btn.active { background: rgba(255,211,44,0.12); border-color: var(--accent); color: var(--accent); }
+        
+        .mobile-sort-wrap {
+          display: none;
+          align-items: center;
+        }
+        .mobile-sort-select {
+          background: rgba(255, 255, 255, 0.08);
+          border: 1px solid var(--glass-border);
+          color: var(--text-primary);
+          padding: 6px 28px 6px 12px;
+          border-radius: var(--r-sm);
+          font-size: 12px;
+          font-weight: 500;
+          cursor: pointer;
+          backdrop-filter: blur(10px);
+          -webkit-backdrop-filter: blur(10px);
+          outline: none;
+          transition: border-color 0.2s, background-color 0.2s;
+          font-family: inherit;
+          appearance: none;
+          -webkit-appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(255,255,255,0.7)' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 10px center;
+        }
+        [data-theme="light"] .mobile-sort-select {
+          background: rgba(0, 0, 0, 0.05);
+          border-color: rgba(0, 0, 0, 0.1);
+          color: #0A0A0B;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='8' height='8' viewBox='0 0 24 24' fill='none' stroke='rgba(0,0,0,0.7)' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+        }
+        .mobile-sort-select option {
+          background: var(--surface-elevated);
+          color: var(--text-primary);
+        }
+
         .view-btns { display: flex; gap: 4px; }
         .view-btn {
           width: 32px;
@@ -566,6 +602,7 @@ function ShopContent() {
           .shop-layout { padding: 100px 0 60px; }
           .products-grid-4, .products-grid-3 { grid-template-columns: repeat(2, 1fr); gap: 14px; }
           .sort-options { display: none; }
+          .mobile-sort-wrap { display: flex; }
           .sort-bar { justify-content: space-between; }
           .list-card { grid-template-columns: 80px 1fr; }
           .list-card > div:last-child { display: none; }
@@ -629,6 +666,21 @@ function ShopContent() {
             {/* Sort bar */}
             <div className="sort-bar glass">
               <span className="sort-count">{products.length} products</span>
+
+              {/* Mobile Sort Dropdown */}
+              <div className="mobile-sort-wrap">
+                <select
+                  value={sort}
+                  onChange={e => setSort(e.target.value as SortOption)}
+                  className="mobile-sort-select"
+                >
+                  {SORT_OPTIONS.map(opt => (
+                    <option key={opt.value} value={opt.value}>
+                      Sort: {opt.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
 
               {/* Mobile filter button */}
               <button
