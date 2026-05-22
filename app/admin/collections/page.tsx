@@ -179,7 +179,7 @@ export default function AdminCollectionsPage() {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .collections-admin-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
         .coll-admin-card { border-radius: 20px; overflow: hidden; }
         .coll-card-header { height: 120px; display: flex; align-items: center; justify-content: center; font-size: 48px; }
@@ -197,7 +197,7 @@ export default function AdminCollectionsPage() {
         .product-thumb { width: 40px; height: 40px; border-radius: 8px; background: rgba(255,255,255,0.06); border: 1px solid var(--border); overflow: hidden; flex-shrink: 0; object-fit: cover; }
         @media (max-width: 1200px) { .collections-admin-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 768px) { .collections-admin-grid { grid-template-columns: 1fr; } .manage-drawer { width: 100vw; } }
-      `}</style>
+      ` }} />
 
       <div className="page-header">
         <div>

@@ -101,7 +101,7 @@ export default function AdminOrdersPage() {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .orders-table { width: 100%; border-collapse: collapse; }
         .orders-table th { padding: 10px 14px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
         .orders-table td { padding: 12px 14px; font-size: 13px; color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
@@ -109,7 +109,7 @@ export default function AdminOrdersPage() {
         .orders-table tr:last-child td { border-bottom: none; }
         .order-detail-overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); z-index: 100; display: flex; align-items: flex-start; justify-content: flex-end; }
         .order-detail-panel { width: 420px; height: 100vh; background: var(--bg-glass); backdrop-filter: blur(20px); border-left: 1px solid var(--border); padding: 32px 24px; overflow-y: auto; }
-      `}</style>
+      `}} />
 
       <div className="page-header">
         <div>

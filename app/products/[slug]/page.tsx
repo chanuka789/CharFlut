@@ -136,7 +136,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes fadeInUp {
           from {
             opacity: 0;
@@ -696,7 +696,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         @media (max-width: 1024px) {
           .pdp-layout {
             grid-template-columns: 1fr;
-            gap: 40px;
+            gap: 32px;
             padding: 120px 16px 60px;
           }
           .gallery { position: static; }
@@ -704,60 +704,65 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         
         @media (max-width: 768px) {
           .pdp-layout {
-            padding: 96px 12px 60px;
-            gap: 16px;
+            padding: 100px 12px 60px;
+            gap: 24px;
           }
           
-          /* Mobile Overlap details */
+          /* Gallery layout optimized: square box to display images with absolute precision */
           .gallery-main {
-            height: min(65vw, 420px);
-            aspect-ratio: auto;
-            border-radius: 28px;
+            width: 100%;
+            height: auto;
+            aspect-ratio: 1 / 1;
+            border-radius: 24px;
             margin-bottom: 12px;
           }
 
           .gallery-thumbs {
             overflow-x: auto;
-            padding: 4px;
+            padding: 4px 0;
+            margin-bottom: 4px;
             -webkit-overflow-scrolling: touch;
-            gap: 10px;
+            gap: 12px;
+            display: flex;
           }
           .gallery-thumbs::-webkit-scrollbar { display: none; }
           .gallery-thumb {
             width: 72px;
             height: 72px;
-            border-radius: 16px;
+            border-radius: 14px;
           }
           .gallery-thumb.active {
-            transform: scale(1.05);
+            transform: scale(1.04);
           }
 
-          /* Floating Glass Info Panel with negative margin to overlap image */
+          /* Floating Glass Info Panel: Removed overlapping negative margin, added clean spacer and premium layout bounds */
           .pdp-panel {
-            background: linear-gradient(135deg, rgba(255,255,255,0.07) 0%, rgba(255,255,255,0.02) 100%);
+            background: linear-gradient(135deg, rgba(255,255,255,0.06) 0%, rgba(255,255,255,0.01) 100%);
             backdrop-filter: blur(40px) saturate(180%);
             -webkit-backdrop-filter: blur(40px) saturate(180%);
-            border: 1px solid rgba(255,255,255,0.12);
-            border-radius: 32px;
-            padding: 32px 24px;
-            margin-top: -48px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 28px;
+            padding: 28px 20px;
+            margin-top: 8px; /* Removed negative margin overlap to fix half-hidden thumbnails */
             position: relative;
             z-index: 10;
-            box-shadow: 
-              0 -20px 40px -10px rgba(0,0,0,0.5),
-              0 20px 40px rgba(0,0,0,0.3);
+            box-shadow: 0 15px 35px rgba(0,0,0,0.25);
             animation: panelReveal 0.65s var(--spring) 0.1s both;
           }
           [data-theme="light"] .pdp-panel {
             background: linear-gradient(135deg, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.65) 100%);
             border-color: rgba(0,0,0,0.08);
-            box-shadow: 
-              0 -15px 30px -10px rgba(0,0,0,0.08),
-              0 15px 30px rgba(0,0,0,0.06);
+            box-shadow: 0 12px 28px rgba(0,0,0,0.05);
           }
 
-          .pdp-panel h1 { font-size: 30px; }
-          .pdp-price { font-size: 30px; margin-bottom: 20px; }
+          .pdp-panel h1 { font-size: 28px; line-height: 1.2; }
+          .pdp-price { font-size: 28px; margin-bottom: 20px; }
+
+          .breadcrumb {
+            flex-wrap: wrap;
+            font-size: 12px;
+            gap: 6px 8px;
+          }
 
           .tabs {
             overflow-x: auto;
@@ -765,7 +770,12 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
             padding-bottom: 4px;
           }
           .tabs::-webkit-scrollbar { display: none; }
+          .tab-btn {
+            padding: 12px 18px;
+            font-size: 13px;
+          }
           
+          /* Balanced trust badges layout for tablets & smaller devices */
           .trust-badges {
             grid-template-columns: repeat(3, 1fr);
             gap: 8px;
@@ -773,16 +783,45 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
           }
           .trust-badge {
             padding: 12px 6px;
-            border-radius: 16px;
+            border-radius: 14px;
           }
-          .trust-badge-icon { font-size: 22px; margin-bottom: 4px; }
+          .trust-badge-icon { font-size: 20px; margin-bottom: 4px; }
           .trust-badge-title { font-size: 11px; }
           .trust-badge-sub { display: none; }
           
-          .cta-row { flex-wrap: wrap; gap: 8px; }
-          .cta-row .btn.btn-primary { flex: 1; min-width: 140px; padding: 14px 20px; font-size: 14px; }
-          .cta-row .btn.btn-ghost:nth-of-type(1) { flex: 1; min-width: 110px; padding: 14px 20px; font-size: 14px; }
-          .cta-row .btn.btn-ghost:nth-of-type(2) { width: 48px; padding: 0; }
+          /* Perfect two-row call-to-action alignment for zero awkward wrapping */
+          .cta-row {
+            display: grid !important;
+            grid-template-columns: 1fr 48px !important;
+            grid-template-rows: auto auto !important;
+            gap: 10px !important;
+            margin-bottom: 24px;
+          }
+          .cta-row .btn.btn-primary {
+            grid-column: 1 / span 2 !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            padding: 14px 20px !important;
+            font-size: 14px !important;
+            height: 48px !important;
+          }
+          .cta-row .btn.btn-ghost:nth-of-type(1) {
+            grid-column: 1 !important;
+            width: 100% !important;
+            min-width: 0 !important;
+            padding: 14px 20px !important;
+            font-size: 14px !important;
+            height: 48px !important;
+          }
+          .cta-row .btn.btn-ghost:nth-of-type(2) {
+            grid-column: 2 !important;
+            width: 48px !important;
+            height: 48px !important;
+            padding: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+          }
 
           .sticky-bottom {
             bottom: 12px;
@@ -794,15 +833,60 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
         }
 
         @media (max-width: 480px) {
+          .pdp-layout {
+            padding: 90px 8px 60px;
+            gap: 16px;
+          }
+          
           .pdp-panel {
             padding: 24px 16px;
-            border-radius: 28px;
+            border-radius: 24px;
           }
-          .pdp-panel h1 { font-size: 25px; }
-          .pdp-price { font-size: 25px; }
+          .pdp-panel h1 { font-size: 24px; }
+          .pdp-price { font-size: 24px; }
           
           .connectivity-pills { gap: 6px; }
-          .conn-pill { padding: 6px 14px; font-size: 11px; }
+          .conn-pill { padding: 6px 12px; font-size: 11px; }
+
+          /* Stacking the quantity stock selector status cleanly */
+          .qty-row {
+            flex-wrap: wrap;
+            gap: 10px 14px;
+            margin-bottom: 24px;
+          }
+          .qty-row span:last-child {
+            margin-left: 0 !important;
+            width: 100%;
+            font-size: 11.5px !important;
+          }
+
+          /* Listing trust badges vertically on small mobile viewports for premium legibility */
+          .trust-badges {
+            grid-template-columns: 1fr;
+            gap: 8px;
+            margin: 20px 0;
+          }
+          .trust-badge {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-align: left;
+            padding: 10px 16px;
+            border-radius: 14px;
+          }
+          .trust-badge-icon {
+            font-size: 18px;
+            margin-bottom: 0;
+          }
+          .trust-badge-title {
+            font-size: 12.5px;
+          }
+          .trust-badge-sub {
+            display: inline;
+            font-size: 11px;
+            opacity: 0.8;
+            margin-left: 4px;
+          }
           
           .sticky-bottom {
             flex-direction: row;
@@ -821,14 +905,14 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
           .sticky-bottom > div:last-child .btn.btn-primary {
             flex: 2;
             padding: 12px 16px;
-            font-size: 13.5px;
+            font-size: 13px;
             border-radius: 14px;
             box-shadow: 0 4px 12px rgba(255,211,44,0.2);
           }
           .sticky-bottom > div:last-child .btn.btn-ghost {
             flex: 1;
             padding: 12px 12px;
-            font-size: 13.5px;
+            font-size: 13px;
             border-radius: 14px;
             background: rgba(255,255,255,0.04);
             border: 1px solid var(--glass-border);
@@ -843,7 +927,7 @@ export default function ProductDetailPage({ params }: { params: { slug: string }
             color: #0a0a0b;
           }
         }
-      `}</style>
+      ` }} />
 
       <div className="container">
         <div className="pdp-layout">

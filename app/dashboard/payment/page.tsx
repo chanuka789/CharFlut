@@ -27,7 +27,7 @@ export default function PaymentPage() {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .cards-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
         .card-visual {
           height: 160px;
@@ -52,7 +52,7 @@ export default function PaymentPage() {
           box-shadow: 0 0 6px rgba(52,211,153,0.5);
         }
         @media (max-width: 768px) { .cards-grid { grid-template-columns: 1fr; } }
-      `}</style>
+      ` }} />
 
       <div className="page-header">
         <h1 style={{ fontSize: 22, fontWeight: 700 }}>Payment Methods</h1>

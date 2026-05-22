@@ -107,7 +107,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .dash-layout { display: flex; flex: 1; padding-top: 80px; min-height: 100vh; }
         .dash-sidebar {
           width: 260px;
@@ -201,17 +201,79 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         @media (max-width: 768px) {
           .dash-layout { flex-direction: column; }
-          .dash-sidebar { width: 64px !important; min-width: 64px !important; overflow: hidden; position: static; height: auto; }
+          .dash-sidebar {
+            width: 100% !important;
+            min-width: 100% !important;
+            height: auto !important;
+            position: sticky !important;
+            top: 80px;
+            z-index: 10;
+            flex-direction: row !important;
+            align-items: center !important;
+            border-right: none !important;
+            border-bottom: 1px solid var(--border);
+            overflow-y: visible !important;
+            overflow-x: auto !important;
+            scrollbar-width: none; /* Hide scrollbar for clean look */
+            -ms-overflow-style: none;
+            padding: 8px 16px !important;
+          }
+          .dash-sidebar::-webkit-scrollbar {
+            display: none; /* Hide scrollbar in Safari/Chrome */
+          }
           .dash-sidebar .dash-name, .dash-sidebar .dash-email { display: none; }
-          .dash-avatar-block { padding: 16px 12px !important; justify-content: center; }
-          .dash-nav-item span:not(.dash-nav-badge) { display: none; }
-          .dash-nav-item { padding: 12px 24px; justify-content: center; }
-          .dash-nav-badge { display: none; }
-          .dash-signout span { display: none; }
-          .dash-signout { justify-content: center; }
+          .dash-avatar-block {
+            padding: 0 !important;
+            border-bottom: none !important;
+            margin-right: 12px;
+            flex-shrink: 0;
+          }
+          .dash-avatar {
+            width: 36px !important;
+            height: 36px !important;
+            font-size: 13px !important;
+          }
+          .dash-nav {
+            display: flex !important;
+            flex-direction: row !important;
+            align-items: center !important;
+            padding: 0 !important;
+            gap: 8px !important;
+            flex: unset !important;
+          }
+          .dash-nav-item {
+            padding: 8px 14px !important;
+            border-radius: 20px !important;
+            font-size: 12px !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+          }
+          .dash-nav-item::before { display: none !important; }
+          .dash-nav-item span:not(.dash-nav-badge) { display: inline !important; }
+          .dash-nav-badge {
+            margin-left: 2px !important;
+            padding: 1px 5px !important;
+            font-size: 9px !important;
+          }
+          .dash-nav-divider { display: none !important; }
+          .dash-signout {
+            width: auto !important;
+            padding: 8px 14px !important;
+            border-radius: 20px !important;
+            font-size: 12px !important;
+            white-space: nowrap !important;
+            flex-shrink: 0 !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+          }
+          .dash-signout span { display: inline !important; }
           .dash-main { padding: 20px 16px; }
         }
-      `}</style>
+      `}} />
 
       <div className="dash-layout">
         <aside className="dash-sidebar">

@@ -1,6 +1,8 @@
 import Link from 'next/link'
 import { prisma } from '@/lib/prisma'
 
+export const dynamic = 'force-dynamic'
+
 const COLLECTION_GRADIENTS = [
   'linear-gradient(135deg, rgba(255,211,44,0.15) 0%, rgba(124,58,237,0.12) 100%)',
   'linear-gradient(135deg, rgba(0,194,255,0.15) 0%, rgba(124,58,237,0.12) 100%)',
@@ -20,7 +22,13 @@ async function getCollections() {
       where: { published: true },
       include: {
         products: {
-          include: { product: true },
+          include: {
+            product: {
+              include: {
+                images: { orderBy: { position: 'asc' }, take: 1 }
+              }
+            }
+          },
           take: 4,
         },
         _count: { select: { products: true } },
@@ -51,7 +59,7 @@ export default async function CollectionsPage() {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .collections-hero { padding: 140px 0 60px; text-align: center; }
         .featured-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 48px; }
         .featured-card {
@@ -175,7 +183,7 @@ export default async function CollectionsPage() {
           .collection-card-image { height: 160px; font-size: 40px; }
           .collection-name { font-size: 15px; }
         }
-      `}</style>
+      ` }} />
 
       <section className="collections-hero">
         <div className="container">
@@ -236,11 +244,18 @@ export default async function CollectionsPage() {
                 <span>{COLLECTION_EMOJIS[(i + 2) % COLLECTION_EMOJIS.length]}</span>
                 {col.products && col.products.length > 0 && (
                   <div className="collection-floating-products">
-                    {col.products.slice(0, 3).map((_: any, j: number) => (
-                      <div key={j} className="collection-product-bubble">
-                        {['✦', '★', '◆'][j]}
-                      </div>
-                    ))}
+                    {col.products.slice(0, 3).map((cp: any, j: number) => {
+                      const imgUrl = cp.product?.images?.[0]?.url
+                      return (
+                        <div key={j} className="collection-product-bubble" style={{ overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                          {imgUrl ? (
+                            <img src={imgUrl} alt={cp.product?.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                          ) : (
+                            ['✦', '★', '◆'][j % 3]
+                          )}
+                        </div>
+                      )
+                    })}
                   </div>
                 )}
               </div>

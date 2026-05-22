@@ -117,7 +117,7 @@ export default function SignInPage() {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .auth-page {
           min-height: 100vh;
           display: flex;
@@ -340,7 +340,7 @@ export default function SignInPage() {
           .auth-card { padding: 28px 20px; }
           .form-row { grid-template-columns: 1fr; }
         }
-      `}</style>
+      ` }} />
 
       <div className="auth-page">
         <div className="auth-card glass">

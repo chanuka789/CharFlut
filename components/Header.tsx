@@ -115,7 +115,7 @@ export function Header() {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .lg-header-wrapper {
           position: fixed;
           top: 16px;
@@ -477,7 +477,7 @@ export function Header() {
           .lg-hdr { padding: 6px 6px 6px 12px; }
           .lg-logo { font-size: 13px; }
         }
-      `}</style>
+      ` }} />
 
       <div className="lg-header-wrapper">
         <nav

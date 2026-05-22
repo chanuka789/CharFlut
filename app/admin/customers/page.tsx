@@ -40,14 +40,14 @@ export default function AdminCustomersPage() {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .cust-table { width: 100%; border-collapse: collapse; }
         .cust-table th { padding: 10px 14px; font-size: 11px; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--text-muted); text-align: left; border-bottom: 1px solid var(--border); }
         .cust-table td { padding: 12px 14px; font-size: 13px; color: var(--text-secondary); border-bottom: 1px solid rgba(255,255,255,0.04); vertical-align: middle; }
         .cust-table tr:hover td { background: rgba(255,255,255,0.02); }
         .cust-table tr:last-child td { border-bottom: none; }
         .avatar { width: 32px; height: 32px; border-radius: 50%; background: rgba(255,211,44,0.15); border: 1px solid rgba(255,211,44,0.3); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; color: var(--accent); }
-      `}</style>
+      ` }} />
 
       <div className="page-header">
         <div>

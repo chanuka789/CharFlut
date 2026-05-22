@@ -63,7 +63,7 @@ export default function AdminDashboard() {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .admin-kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
         .admin-grid { display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
         .kpi-skeleton { height: 18px; border-radius: 6px; background: rgba(255,255,255,0.06); animation: pulse 1.5s ease-in-out infinite; }
@@ -72,7 +72,7 @@ export default function AdminDashboard() {
           .admin-kpis { grid-template-columns: repeat(2, 1fr); }
           .admin-grid { grid-template-columns: 1fr; }
         }
-      `}</style>
+      ` }} />
 
       <div className="page-header">
         <div>

@@ -1,17 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 
-const WISHLIST = [
-  { id: '1', name: 'Smart Watch Pro', price: 599, slug: 'smart-watch-pro', emoji: '⌚', sale: false },
-  { id: '2', name: 'Designer Sunglasses', price: 329, slug: 'designer-sunglasses', emoji: '🕶️', sale: true, salePrice: 249 },
-  { id: '3', name: 'Premium Leather Bag', price: 459, slug: 'premium-leather-bag', emoji: '👜', sale: false },
-  { id: '4', name: 'Minimal Wireless Headphones', price: 299, slug: 'minimal-wireless-headphones', emoji: '⚡', sale: false },
-]
-
 export default function WishlistPage() {
-  const [items, setItems] = useState(WISHLIST)
+  const [items, setItems] = useState<any[]>([])
+  const [loading, setLoading] = useState(true)
   const [toast, setToast] = useState('')
 
   const showToast = (msg: string) => {
@@ -19,24 +13,62 @@ export default function WishlistPage() {
     setTimeout(() => setToast(''), 3000)
   }
 
-  const handleAddToCart = (item: typeof WISHLIST[0]) => {
+  useEffect(() => {
+    const fetchWishlist = async () => {
+      try {
+        const res = await fetch('/api/wishlist')
+        if (res.ok) {
+          const data = await res.json()
+          setItems(data.wishlist || [])
+        }
+      } catch (err) {
+        console.error('Failed to fetch wishlist:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchWishlist()
+  }, [])
+
+  const handleRemove = async (productId: string, productName: string) => {
+    try {
+      const res = await fetch(`/api/wishlist?productId=${productId}`, {
+        method: 'DELETE',
+      })
+      if (res.ok) {
+        setItems(prev => prev.filter(i => i.productId !== productId))
+        showToast(`Removed "${productName}" from wishlist`)
+        window.dispatchEvent(new Event('cf-wishlist-change'))
+      }
+    } catch (err) {
+      console.error('Failed to remove item:', err)
+    }
+  }
+
+  const handleAddToCart = (product: any) => {
     try {
       const cart = JSON.parse(localStorage.getItem('cf_cart') || '[]')
-      const idx = cart.findIndex((i: any) => i.id === item.id)
-      if (idx >= 0) cart[idx].qty = (cart[idx].qty || 1) + 1
-      else cart.push({ id: item.id, name: item.name, price: item.salePrice || item.price, qty: 1 })
+      const idx = cart.findIndex((i: any) => i.id === product.id)
+      const price = product.salePrice !== null && product.salePrice !== undefined ? product.salePrice : product.price
+      if (idx >= 0) {
+        cart[idx].qty = (cart[idx].qty || 1) + 1
+      } else {
+        cart.push({ id: product.id, name: product.name, price: price, qty: 1 })
+      }
       localStorage.setItem('cf_cart', JSON.stringify(cart))
       window.dispatchEvent(new Event('cf-cart-change'))
-      showToast(`${item.name} added to cart!`)
-    } catch {}
+      showToast(`${product.name} added to cart!`)
+    } catch (err) {
+      console.error(err)
+    }
   }
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .wish-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
         .wish-card { border-radius: 18px; padding: 16px; position: relative; }
-        .wish-img { aspect-ratio: 1; border-radius: 12px; overflow: hidden; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; font-size: 56px; background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); }
+        .wish-img { aspect-ratio: 1; border-radius: 12px; overflow: hidden; margin-bottom: 12px; display: flex; align-items: center; justify-content: center; font-size: 56px; background: linear-gradient(135deg, rgba(255,255,255,0.06), rgba(255,255,255,0.02)); position: relative; }
         [data-theme="light"] .wish-img { background: linear-gradient(135deg, #ECE6DA 0%, #DDD4C2 100%) !important; }
         .wish-remove {
           position: absolute;
@@ -53,18 +85,46 @@ export default function WishlistPage() {
           color: var(--danger);
           font-size: 16px;
           transition: all 0.2s;
+          z-index: 5;
         }
         .wish-remove:hover { background: rgba(255,92,92,0.2); }
+        
+        /* Pulse Animation */
+        @keyframes pulse {
+          0%, 100% { opacity: 0.6; }
+          50% { opacity: 0.3; }
+        }
+        .skeleton {
+          animation: pulse 1.5s ease-in-out infinite;
+          background: rgba(255,255,255,0.06);
+          border-radius: 12px;
+        }
+        [data-theme="light"] .skeleton {
+          background: rgba(0,0,0,0.04);
+        }
         @media (max-width: 1024px) { .wish-grid { grid-template-columns: repeat(2, 1fr); } }
         @media (max-width: 480px) { .wish-grid { grid-template-columns: 1fr 1fr; gap: 12px; } }
-      `}</style>
+      ` }} />
 
       <div className="page-header">
         <h1 style={{ fontSize: 22, fontWeight: 700 }}>My Wishlist</h1>
-        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>{items.length} items saved</span>
+        <span style={{ fontSize: 13, color: 'var(--text-muted)' }}>
+          {loading ? '...' : `${items.length} items saved`}
+        </span>
       </div>
 
-      {items.length === 0 ? (
+      {loading ? (
+        <div className="wish-grid">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="panel" style={{ padding: 16 }}>
+              <div className="skeleton" style={{ width: '100%', aspectRatio: 1, marginBottom: 12 }} />
+              <div className="skeleton" style={{ width: '70%', height: 14, marginBottom: 8 }} />
+              <div className="skeleton" style={{ width: '40%', height: 16, marginBottom: 16 }} />
+              <div className="skeleton" style={{ width: '100%', height: 36, borderRadius: 8 }} />
+            </div>
+          ))}
+        </div>
+      ) : items.length === 0 ? (
         <div className="panel" style={{ padding: 80, textAlign: 'center' }}>
           <div style={{ fontSize: 64, marginBottom: 16 }}>❤️</div>
           <p style={{ fontSize: 18, fontWeight: 600, marginBottom: 8 }}>Your wishlist is empty</p>
@@ -73,35 +133,49 @@ export default function WishlistPage() {
         </div>
       ) : (
         <div className="wish-grid">
-          {items.map(item => (
-            <div key={item.id} className="wish-card panel">
-              <button
-                className="wish-remove"
-                onClick={() => { setItems(prev => prev.filter(i => i.id !== item.id)); showToast('Removed from wishlist') }}
-                aria-label="Remove from wishlist"
-              >
-                ×
-              </button>
-              <Link href={`/products/${item.slug}`}>
-                <div className="wish-img">
-                  {item.emoji}
+          {items.map(item => {
+            const product = item.product
+            if (!product) return null
+            const imgUrl = product.images?.[0]?.url
+            const hasSale = product.salePrice !== null && product.salePrice !== undefined
+            const displayPrice = hasSale ? product.salePrice : product.price
+
+            return (
+              <div key={item.productId} className="wish-card panel">
+                <button
+                  className="wish-remove"
+                  onClick={() => handleRemove(product.id, product.name)}
+                  aria-label="Remove from wishlist"
+                >
+                  ×
+                </button>
+                <Link href={`/products/${product.slug}`}>
+                  <div className="wish-img">
+                    {imgUrl ? (
+                      <img src={imgUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ) : (
+                      '🛍️'
+                    )}
+                  </div>
+                </Link>
+                <div className="product-name" style={{ fontSize: 14, marginBottom: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {product.name}
                 </div>
-              </Link>
-              <div className="product-name" style={{ fontSize: 14, marginBottom: 6 }}>{item.name}</div>
-              <div className="product-price" style={{ fontSize: 16, marginBottom: 12 }}>
-                ${(item.salePrice || item.price).toFixed(2)}
-                {item.salePrice && <span className="product-price-sale">${item.price.toFixed(2)}</span>}
+                <div className="product-price" style={{ fontSize: 16, marginBottom: 12 }}>
+                  ${displayPrice.toFixed(2)}
+                  {hasSale && <span className="product-price-sale" style={{ marginLeft: 8, textDecoration: 'line-through', fontSize: 12, color: 'var(--text-muted)' }}>${product.price.toFixed(2)}</span>}
+                </div>
+                {hasSale && <span className="pill-g pill-red" style={{ marginBottom: 10, display: 'inline-block' }}>On Sale!</span>}
+                <button
+                  className="btn-p"
+                  style={{ width: '100%', padding: '9px', fontSize: 13 }}
+                  onClick={() => handleAddToCart(product)}
+                >
+                  Add to Cart
+                </button>
               </div>
-              {item.sale && <span className="pill-g pill-red" style={{ marginBottom: 10, display: 'inline-block' }}>On Sale!</span>}
-              <button
-                className="btn-p"
-                style={{ width: '100%', padding: '9px', fontSize: 13 }}
-                onClick={() => handleAddToCart(item)}
-              >
-                Add to Cart
-              </button>
-            </div>
-          ))}
+            )
+          })}
         </div>
       )}
 

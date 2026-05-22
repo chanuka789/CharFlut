@@ -102,7 +102,7 @@ export default function AdminProductsPage() {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .admin-table-wrap { overflow-x: auto; }
         .admin-table { width: 100%; border-collapse: collapse; }
         .admin-table th {
@@ -131,7 +131,7 @@ export default function AdminProductsPage() {
         .status-dot.draft { background: var(--text-muted); }
         .row-actions { display: flex; gap: 6px; opacity: 0; transition: opacity 0.15s; }
         .admin-table tr:hover .row-actions { opacity: 1; }
-      `}</style>
+      `}} />
 
       <div className="page-header">
         <div>

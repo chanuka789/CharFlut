@@ -165,7 +165,7 @@ export function HomepageClient({
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .hero {
           padding: 200px 0 120px;
           position: relative;
@@ -386,7 +386,7 @@ export function HomepageClient({
           .trust-items { flex-direction: column; align-items: stretch; }
           .trust-item { justify-content: center; }
         }
-      `}</style>
+      ` }} />
 
       {/* Hero */}
       <section className="hero" id="home">

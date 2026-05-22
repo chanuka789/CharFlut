@@ -332,7 +332,7 @@ export default function ProductEditorPage({ params }: { params: { id: string } }
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .editor-layout { display: grid; grid-template-columns: 1fr 280px; gap: 24px; align-items: start; }
         .editor-tabs { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 24px; overflow-x: auto; }
         .editor-tab {
@@ -351,7 +351,7 @@ export default function ProductEditorPage({ params }: { params: { id: string } }
         .upload-zone { border: 2px dashed var(--border); border-radius: 12px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; cursor: pointer; color: var(--text-muted); font-size: 12px; transition: border-color 0.2s, background 0.2s; }
         .upload-zone:hover { border-color: var(--accent); background: rgba(255,211,44,0.04); }
         @media (max-width: 1024px) { .editor-layout { grid-template-columns: 1fr; } }
-      `}</style>
+      `}} />
 
       <div className="page-header">
         <div>

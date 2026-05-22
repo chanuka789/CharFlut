@@ -10,7 +10,10 @@ async function getCollection(slug: string) {
         products: {
           include: {
             product: {
-              include: { category: true }
+              include: {
+                category: true,
+                images: { orderBy: { position: 'asc' } }
+              }
             }
           }
         },
@@ -76,7 +79,7 @@ export default async function CollectionDetailPage({ params }: { params: { slug:
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .collection-hero {
           min-height: 60vh;
           display: flex;
@@ -196,7 +199,17 @@ export default async function CollectionDetailPage({ params }: { params: { slug:
           .products-grid { grid-template-columns: repeat(2, 1fr); }
           .stats-bar { grid-template-columns: repeat(2, 1fr); }
         }
-      `}</style>
+        @media (max-width: 480px) {
+          .collection-hero { padding: 110px 0 32px; min-height: auto; }
+          .collection-title { font-size: 28px; line-height: 32px; }
+          .collection-tagline { font-size: 15px; }
+          .stats-bar { grid-template-columns: 1fr; gap: 8px; background: transparent; }
+          .stat-item { padding: 14px; border-radius: 12px; border: 1px solid var(--glass-border); }
+          .products-grid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
+          .products-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+          .products-header select { width: 100% !important; }
+        }
+      ` }} />
 
       {/* Hero */}
       <section className="collection-hero">
@@ -269,18 +282,29 @@ export default async function CollectionDetailPage({ params }: { params: { slug:
           </div>
         ) : (
           <div className="products-grid">
-            {products.map((product: any) => (
-              <Link key={product.id} href={`/products/${product.slug}`} className="product-card glass">
-                <div className="product-image-wrapper">
-                  <div className="product-image">
-                    <span style={{ fontFamily: 'system-ui', fontSize: 40 }}>🛍️</span>
-                    <span style={{ fontSize: 10 }}>{product.name}</span>
+            {products.map((product: any) => {
+              const imgUrl = product.images?.[0]?.url
+              return (
+                <Link key={product.id} href={`/products/${product.slug}`} className="product-card glass">
+                  <div className="product-image-wrapper">
+                    <div className="product-image" style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      {imgUrl ? (
+                        <img src={imgUrl} alt={product.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+                      ) : (
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', padding: '12px', textAlign: 'center' }}>
+                          <span style={{ fontFamily: 'system-ui', fontSize: 32, display: 'block', marginBottom: 4 }}>🛍️</span>
+                          <span style={{ fontSize: 9, opacity: 0.8, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', maxWidth: '100%' }}>{product.name}</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-                <div className="product-name">{product.name}</div>
-                <div className="product-price">${(product.salePrice || product.price).toFixed(2)}</div>
-              </Link>
-            ))}
+                  <div className="product-name" style={{ fontSize: 13, fontWeight: 600, marginTop: 8, padding: '0 8px' }}>{product.name}</div>
+                  <div className="product-price" style={{ fontSize: 14, fontWeight: 700, color: 'var(--accent-primary)', padding: '0 8px 8px' }}>
+                    ${(product.salePrice !== null && product.salePrice !== undefined ? product.salePrice : product.price).toFixed(2)}
+                  </div>
+                </Link>
+              )
+            })}
           </div>
         )}
 

@@ -287,7 +287,7 @@ function ShopContent() {
 
   return (
     <>
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .shop-layout { display: grid; grid-template-columns: 260px 1fr; gap: 32px; padding: 120px 0 80px; }
         .filter-sidebar { position: sticky; top: 100px; height: fit-content; }
         .filter-section { margin-bottom: 28px; }
@@ -578,7 +578,7 @@ function ShopContent() {
           .sort-bar { padding: 10px 12px; }
           .compare-bar { padding: 12px 16px; flex-wrap: wrap; gap: 10px; }
         }
-      `}</style>
+      ` }} />
 
       <div className="container">
         {/* Page header */}
@@ -911,9 +911,9 @@ function ShopContent() {
         </div>
       )}
 
-      <style>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         .product-card:hover .quick-view-btn { opacity: 1 !important; }
-      `}</style>
+      ` }} />
     </>
   )
 }
