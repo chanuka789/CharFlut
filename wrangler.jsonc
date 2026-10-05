@@ -21,7 +21,7 @@
 		"FREE_SHIPPING_USD": "60",
 		"FREE_SHIPPING_GBP": "50",
 		"WEBXPAY_BASE_URL": "https://stagingxpay.info/index.php?route=checkout/billing",
-		"ACCESS_TEAM_DOMAIN": "https://REPLACE_WITH_TEAM.cloudflareaccess.com"
+		"ACCESS_TEAM_DOMAIN": "https://charflut.cloudflareaccess.com"
 	},
 	"d1_databases": [
 		{
@@ -72,7 +72,7 @@
 				"FREE_SHIPPING_USD": "60",
 				"FREE_SHIPPING_GBP": "50",
 				"WEBXPAY_BASE_URL": "https://stagingxpay.info/index.php?route=checkout/billing",
-				"ACCESS_TEAM_DOMAIN": "https://REPLACE_WITH_TEAM.cloudflareaccess.com"
+				"ACCESS_TEAM_DOMAIN": "https://charflut.cloudflareaccess.com"
 			},
 			"d1_databases": [
 				{
