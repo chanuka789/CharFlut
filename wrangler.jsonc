@@ -1,70 +1,113 @@
 // CharFlut Worker config. Secrets are NOT stored here: set them with `npx wrangler secret put <NAME>`.
 // Replace the REPLACE_WITH_... IDs after running the commands in docs/plan/13-cloudflare-setup.md.
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "charflut",
-  "main": "./src/worker.ts",
-  "compatibility_date": "2026-10-01",
-  "compatibility_flags": ["nodejs_compat"],
-  "assets": {
-    "directory": "./dist/client",
-    "binding": "ASSETS"
-  },
-  "observability": { "enabled": true },
-  "vars": {
-    "SITE_URL": "https://charflut.com",
-    "STORE_CURRENCIES": "USD,GBP",
-    "FREE_SHIPPING_USD": "60",
-    "FREE_SHIPPING_GBP": "50",
-    "WEBXPAY_BASE_URL": "https://stagingxpay.info/index.php?route=checkout/billing",
-    "ACCESS_TEAM_DOMAIN": "https://REPLACE_WITH_TEAM.cloudflareaccess.com"
-  },
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "charflut-db",
-      "database_id": "REPLACE_WITH_D1_DATABASE_ID",
-      "migrations_dir": "migrations"
-    }
-  ],
-  "r2_buckets": [
-    { "binding": "MEDIA", "bucket_name": "charflut-media" }
-  ],
-  "kv_namespaces": [
-    { "binding": "SESSION", "id": "REPLACE_WITH_KV_NAMESPACE_ID" }
-  ],
-  "queues": {
-    "producers": [{ "binding": "ORDER_QUEUE", "queue": "charflut-orders" }],
-    "consumers": [{ "queue": "charflut-orders", "max_retries": 3, "dead_letter_queue": "charflut-orders-dlq" }]
-  },
-  "triggers": {
-    "crons": ["0 3 * * *"]
-  },
-  "env": {
-    "staging": {
-      "name": "charflut-staging",
-      "vars": {
-        "SITE_URL": "https://staging.charflut.com",
-        "STORE_CURRENCIES": "USD,GBP",
-        "FREE_SHIPPING_USD": "60",
-        "FREE_SHIPPING_GBP": "50",
-        "WEBXPAY_BASE_URL": "https://stagingxpay.info/index.php?route=checkout/billing",
-        "ACCESS_TEAM_DOMAIN": "https://REPLACE_WITH_TEAM.cloudflareaccess.com"
-      },
-      "d1_databases": [
-        {
-          "binding": "DB",
-          "database_name": "charflut-db-staging",
-          "database_id": "REPLACE_WITH_STAGING_D1_DATABASE_ID",
-          "migrations_dir": "migrations"
-        }
-      ],
-      "r2_buckets": [{ "binding": "MEDIA", "bucket_name": "charflut-media-staging" }],
-      "kv_namespaces": [{ "binding": "SESSION", "id": "REPLACE_WITH_STAGING_KV_NAMESPACE_ID" }],
-      "queues": {
-        "producers": [{ "binding": "ORDER_QUEUE", "queue": "charflut-orders-staging" }],
-        "consumers": [{ "queue": "charflut-orders-staging", "max_retries": 3 }]
-      }
-    }
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "charflut",
+	"main": "./src/worker.ts",
+	"compatibility_date": "2026-10-01",
+	"compatibility_flags": [
+		"nodejs_compat"
+	],
+	"assets": {
+		"directory": "./dist/client",
+		"binding": "ASSETS"
+	},
+	"observability": {
+		"enabled": true
+	},
+	"vars": {
+		"SITE_URL": "https://charflut.com",
+		"STORE_CURRENCIES": "USD,GBP",
+		"FREE_SHIPPING_USD": "60",
+		"FREE_SHIPPING_GBP": "50",
+		"WEBXPAY_BASE_URL": "https://stagingxpay.info/index.php?route=checkout/billing",
+		"ACCESS_TEAM_DOMAIN": "https://REPLACE_WITH_TEAM.cloudflareaccess.com"
+	},
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "charflut-db",
+			"database_id": "a08fa256-0621-49aa-add3-24f0c1a65076",
+			"migrations_dir": "migrations"
+		}
+	],
+	"r2_buckets": [
+		{
+			"binding": "MEDIA",
+			"bucket_name": "charflut-media"
+		}
+	],
+	"kv_namespaces": [
+		{
+			"binding": "SESSION",
+			"id": "022ffa293a5e44abae9c46458ae9c8a9"
+		}
+	],
+	"queues": {
+		"producers": [
+			{
+				"binding": "ORDER_QUEUE",
+				"queue": "charflut-orders"
+			}
+		],
+		"consumers": [
+			{
+				"queue": "charflut-orders",
+				"max_retries": 3,
+				"dead_letter_queue": "charflut-orders-dlq"
+			}
+		]
+	},
+	"triggers": {
+		"crons": [
+			"0 3 * * *"
+		]
+	},
+	"env": {
+		"staging": {
+			"name": "charflut-staging",
+			"vars": {
+				"SITE_URL": "https://staging.charflut.com",
+				"STORE_CURRENCIES": "USD,GBP",
+				"FREE_SHIPPING_USD": "60",
+				"FREE_SHIPPING_GBP": "50",
+				"WEBXPAY_BASE_URL": "https://stagingxpay.info/index.php?route=checkout/billing",
+				"ACCESS_TEAM_DOMAIN": "https://REPLACE_WITH_TEAM.cloudflareaccess.com"
+			},
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "charflut-db-staging",
+					"database_id": "REPLACE_WITH_STAGING_D1_DATABASE_ID",
+					"migrations_dir": "migrations"
+				}
+			],
+			"r2_buckets": [
+				{
+					"binding": "MEDIA",
+					"bucket_name": "charflut-media-staging"
+				}
+			],
+			"kv_namespaces": [
+				{
+					"binding": "SESSION",
+					"id": "REPLACE_WITH_STAGING_KV_NAMESPACE_ID"
+				}
+			],
+			"queues": {
+				"producers": [
+					{
+						"binding": "ORDER_QUEUE",
+						"queue": "charflut-orders-staging"
+					}
+				],
+				"consumers": [
+					{
+						"queue": "charflut-orders-staging",
+						"max_retries": 3
+					}
+				]
+			}
+		}
+	}
 }
