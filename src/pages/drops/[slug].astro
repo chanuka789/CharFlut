@@ -1,0 +1,61 @@
+---
+/** One page per collection (plan 04): story header, countdown before launch, products, waitlist. */
+import StoreLayout from '@/layouts/StoreLayout.astro';
+import Breadcrumbs from '@/components/ui/Breadcrumbs.astro';
+import Countdown from '@/components/commerce/Countdown.astro';
+import WaitlistForm from '@/components/commerce/WaitlistForm.astro';
+import ProductGrid from '@/components/commerce/ProductGrid.astro';
+import Marquee from '@/components/ui/Marquee.astro';
+import Garment from '@/components/product/Garment';
+import Section from '@/components/ui/Section.astro';
+import { getDrop, getProduct } from '@/data/catalog';
+import type { Product } from '@/lib/types';
+
+const drop = getDrop(Astro.params.slug!);
+if (!drop) return Astro.rewrite('/404');
+const items = drop.productSlugs.map(getProduct).filter(Boolean) as Product[];
+const live = new Date(drop.launchAt).getTime() <= Date.now();
+const hero = items[0];
+---
+
+<StoreLayout title={`Drop ${drop.number}: ${drop.title}`} description={drop.story} headerOverlay>
+  <section data-theme="dark" class="relative min-h-[100svh] overflow-hidden bg-bg text-ink cf-grain">
+    <div
+      aria-hidden="true"
+      class="absolute left-1/2 top-1/2 size-[min(130vw,1200px)] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-30 blur-3xl"
+      style={`background: radial-gradient(circle, ${drop.lightHex} 0%, transparent 60%)`}
+      data-parallax="0.2"
+    >
+    </div>
+    <p aria-hidden="true" class="t-display pointer-events-none absolute -left-[0.04em] top-[12%] select-none text-[42vw] leading-none text-white/[0.04]" data-parallax="-0.25">
+      {drop.number}
+    </p>
+    <div class="absolute inset-x-[8%] bottom-[6%] top-[22%] md:left-[45%] md:right-[4%] md:top-[14%]" data-parallax="0.12">
+      {hero && <Garment category={hero.category} color={hero.colors[0].hex} ink={hero.colors[0].ink} design={hero.design} view="back" className="h-full w-full drop-shadow-[0_50px_60px_rgba(0,0,0,0.6)]" />}
+    </div>
+    <div class="cf-container relative flex min-h-[100svh] flex-col justify-end pb-[clamp(32px,6vw,80px)] pt-[calc(var(--header-h)+var(--bar-h)+32px)]">
+      <Breadcrumbs class="mb-auto" items={[{ label: 'Home', href: '/' }, { label: 'Drops', href: '/drops' }, { label: drop.title }]} />
+      <div class="max-w-2xl">
+        <p class="t-label mb-4 flex items-center gap-3 text-muted" data-reveal>
+          <span class="inline-block size-2.5 rounded-full" style={`background:${drop.lightHex}`}></span> Drop {drop.number} · {live ? 'Live now' : 'Coming soon'}
+        </p>
+        <h1 class="t-display" data-split>{drop.title}</h1>
+        <p class="t-lead mt-5 max-w-lg !text-white/75" data-reveal>{drop.story}</p>
+        {
+          !live && (
+            <div class="mt-8 space-y-6" data-reveal>
+              <Countdown to={drop.launchAt} />
+              <WaitlistForm source={`drop-${drop.number}`} class="max-w-lg" />
+            </div>
+          )
+        }
+        {live && <a href="#drop-products" class="btn btn-primary btn-lg mt-8" data-magnetic data-reveal><span>Shop the drop</span></a>}
+      </div>
+    </div>
+  </section>
+  <Marquee tone="light" items={[`Drop ${drop.number}`, drop.title, `${items.length} pieces`, 'Printed to order']} />
+  <Section tone="light" id="drop-products">
+    <h2 class="t-h2 mb-10">{live ? 'The pieces' : 'A first look'}</h2>
+    <ProductGrid products={items} />
+  </Section>
+</StoreLayout>

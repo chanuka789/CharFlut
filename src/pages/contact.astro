@@ -1,0 +1,86 @@
+---
+import StoreLayout from '@/layouts/StoreLayout.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import Field from '@/components/ui/Field.astro';
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+
+const topic = Astro.url.searchParams.get('topic') ?? 'order';
+const turnstileSiteKey = import.meta.env.PUBLIC_TURNSTILE_SITE_KEY as string | undefined;
+---
+
+<StoreLayout title="Contact" description="Contact CharFlut. We reply within one working day.">
+  <PageHeader title="Talk to us" eyebrow="Contact" lead="Questions about an order, sizing or a collaboration. We reply within one working day." crumbs={[{ label: 'Home', href: '/' }, { label: 'Contact' }]} outlineWord="HELLO" />
+  <section class="bg-bg pb-[var(--section-y)]">
+    <div class="cf-container grid gap-12 lg:grid-cols-12">
+      <form method="post" action="/api/contact" class="grid gap-5 lg:col-span-7" data-contact novalidate>
+        <div class="grid gap-5 sm:grid-cols-2">
+          <Field label="Name" name="name" autocomplete="name" />
+          <Field label="Email" name="email" type="email" required autocomplete="email" />
+        </div>
+        <div class="grid gap-5 sm:grid-cols-2">
+          <Field
+            label="Topic"
+            name="topic"
+            as="select"
+            required
+            value={topic}
+            options={[
+              { value: 'order', label: 'An order' },
+              { value: 'return', label: 'Return or fault' },
+              { value: 'sizing', label: 'Sizing' },
+              { value: 'wholesale', label: 'Collaboration' },
+              { value: 'other', label: 'Something else' },
+            ]}
+          />
+          <Field label="Order number" name="order" placeholder="CF-100000" />
+        </div>
+        <Field label="Message" name="message" as="textarea" required />
+        {turnstileSiteKey && <div class="cf-turnstile" data-sitekey={turnstileSiteKey}></div>}
+        <div class="flex flex-wrap items-center gap-4">
+          <Button type="submit" variant="dark" arrow>Send message</Button>
+          <p class="field-hint" data-msg aria-live="polite"></p>
+        </div>
+      </form>
+      <aside class="grid content-start gap-3 lg:col-span-4 lg:col-start-9">
+        <a href="/track-order" class="panel flex items-center gap-4 transition-transform hover:-translate-y-0.5"><Icon name="truck" /><span><strong class="block">Track an order</strong><span class="t-small t-muted">Order number + email</span></span></a>
+        <a href="/help/returns" class="panel flex items-center gap-4 transition-transform hover:-translate-y-0.5"><Icon name="return" /><span><strong class="block">Returns and faults</strong><span class="t-small t-muted">Free replacements</span></span></a>
+        <a href="/help/faq" class="panel flex items-center gap-4 transition-transform hover:-translate-y-0.5"><Icon name="inbox" /><span><strong class="block">FAQ</strong><span class="t-small t-muted">Quick answers</span></span></a>
+        <a href="mailto:hello@charflut.com" class="panel flex items-center gap-4 transition-transform hover:-translate-y-0.5"><Icon name="mail" /><span><strong class="block">hello@charflut.com</strong><span class="t-small t-muted">Email us directly</span></span></a>
+      </aside>
+    </div>
+  </section>
+  {turnstileSiteKey && <script is:inline src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>}
+</StoreLayout>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const form = document.querySelector<HTMLFormElement>('[data-contact]');
+    if (!form || form.dataset.bound) return;
+    form.dataset.bound = '1';
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const msg = form.querySelector<HTMLElement>('[data-msg]')!;
+      form.querySelectorAll('.field-error').forEach((el) => ((el as HTMLElement).hidden = true));
+      form.querySelectorAll('[aria-invalid]').forEach((el) => el.removeAttribute('aria-invalid'));
+      const res = await fetch(form.action, { method: 'POST', body: new FormData(form) });
+      const body = (await res.json()) as { message?: string; error?: string; fields?: Record<string, string> };
+      if (res.ok) {
+        form.reset();
+        msg.textContent = body.message ?? 'Sent.';
+        return;
+      }
+      msg.textContent = body.error ?? 'Please try again.';
+      for (const [k, v] of Object.entries(body.fields ?? {})) {
+        const input = form.querySelector<HTMLElement>(`#f-${k}`);
+        const err = form.querySelector<HTMLElement>(`#f-${k}-err`);
+        input?.setAttribute('aria-invalid', 'true');
+        if (err) {
+          err.textContent = v;
+          err.hidden = false;
+        }
+      }
+      form.querySelector<HTMLElement>('[aria-invalid="true"]')?.focus();
+    });
+  });
+</script>

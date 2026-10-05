@@ -1,0 +1,14 @@
+---
+import StoreLayout from '@/layouts/StoreLayout.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import CartPage from '@/components/commerce/CartPage';
+---
+
+<StoreLayout title="Cart" noindex>
+  <PageHeader title="Your cart" crumbs={[{ label: 'Home', href: '/' }, { label: 'Cart' }]} />
+  <section class="bg-bg pb-[var(--section-y)]">
+    <div class="cf-container">
+      <CartPage client:load />
+    </div>
+  </section>
+</StoreLayout>

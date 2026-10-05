@@ -1,0 +1,82 @@
+---
+import AccountLayout from '@/layouts/AccountLayout.astro';
+import EmptyState from '@/components/ui/EmptyState.astro';
+import Field from '@/components/ui/Field.astro';
+import Button from '@/components/ui/Button.astro';
+import { requireCustomer } from '@/lib/server/account';
+import { db, uid } from '@/lib/server/db';
+import { US_STATES } from '@/lib/regions';
+
+const customer = await requireCustomer(Astro);
+if (customer instanceof Response) return customer;
+
+type Addr = { id: string; name: string; line1: string; line2: string | null; city: string; region: string | null; postcode: string; country: string; is_default: number };
+const d = db();
+if (Astro.request.method === 'POST' && d && customer.id !== 'demo') {
+  const fd = await Astro.request.formData();
+  const f = (k: string) => String(fd.get(k) ?? '').trim().slice(0, 120);
+  if (fd.get('_action') === 'delete') {
+    await d.prepare('DELETE FROM addresses WHERE id = ? AND customer_id = ?').bind(f('id'), customer.id).run();
+  } else if (f('name') && f('line1') && f('city') && f('postcode')) {
+    await d
+      .prepare('INSERT INTO addresses (id, customer_id, name, line1, line2, city, region, postcode, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+      .bind(uid('adr'), customer.id, f('name'), f('line1'), f('line2') || null, f('city'), f('region') || null, f('postcode').toUpperCase(), f('country') === 'GB' ? 'GB' : 'US')
+      .run();
+  }
+}
+let addresses: Addr[] = [];
+try {
+  addresses = d && customer.id !== 'demo' ? (await d.prepare('SELECT * FROM addresses WHERE customer_id = ? ORDER BY is_default DESC').bind(customer.id).all<Addr>()).results : [];
+} catch {
+  addresses = [];
+}
+---
+
+<AccountLayout title="Addresses" customer={customer}>
+  <div class="grid gap-10 xl:grid-cols-2">
+    <div>
+      {
+        addresses.length ? (
+          <ul class="grid gap-3">
+            {addresses.map((a) => (
+              <li class="panel-line flex items-start justify-between gap-4">
+                <address class="not-italic">
+                  <strong>{a.name}</strong>
+                  <br />
+                  {a.line1}
+                  {a.line2 && <>, {a.line2}</>}
+                  <br />
+                  {a.city} {a.region} {a.postcode}
+                  <br />
+                  {a.country === 'GB' ? 'United Kingdom' : 'United States'}
+                </address>
+                <form method="post">
+                  <input type="hidden" name="_action" value="delete" />
+                  <input type="hidden" name="id" value={a.id} />
+                  <button class="text-sm font-semibold underline underline-offset-4">Remove</button>
+                </form>
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <EmptyState icon="home" title="No saved addresses" body="Save an address for a faster checkout next time." />
+        )
+      }
+    </div>
+    <form method="post" class="panel grid gap-4">
+      <h2 class="t-h3">Add an address</h2>
+      <Field label="Full name" name="name" required autocomplete="name" />
+      <Field label="Address" name="line1" required autocomplete="address-line1" />
+      <Field label="Apartment, suite, etc." name="line2" autocomplete="address-line2" />
+      <div class="grid gap-4 sm:grid-cols-2">
+        <Field label="City" name="city" required autocomplete="address-level2" />
+        <Field label="State / county" name="region" as="select" options={[{ value: '', label: 'UK county or none' }, ...US_STATES.map(([v, l]) => ({ value: v, label: l }))]} />
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <Field label="ZIP / postcode" name="postcode" required autocomplete="postal-code" />
+        <Field label="Country" name="country" as="select" required options={[{ value: 'US', label: 'United States' }, { value: 'GB', label: 'United Kingdom' }]} />
+      </div>
+      <Button type="submit" variant="dark">Save address</Button>
+    </form>
+  </div>
+</AccountLayout>

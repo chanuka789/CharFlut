@@ -1,0 +1,22 @@
+---
+/** Lookbook teaser (plan 04 #6): three images in a staggered grid with parallax. */
+import Editorial from './Editorial.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+---
+
+<section class="cf-section overflow-hidden bg-bg">
+  <div class="cf-container">
+    <SectionHeader eyebrow="Lookbook · Autumn 26" title="Worn loud, in the calmest way." href="/lookbook" linkLabel="Open the lookbook" />
+    <div class="grid grid-cols-2 gap-3 sm:gap-5 md:grid-cols-12">
+      <a href="/lookbook" class="col-span-2 md:col-span-5" data-cursor="view" data-reveal>
+        <Editorial class="aspect-[4/5]" tone="#D9CBB0" word="SAND" category="hoodies" color="#D9CBB0" ink="#111111" design="sunburst" view="back" />
+      </a>
+      <a href="/lookbook" class="md:col-span-4 md:mt-[22%]" data-cursor="view" data-reveal>
+        <Editorial class="aspect-[3/4]" tone="#111111" word="NIGHT" category="tees" color="#141414" ink="#FFC800" design="statement" view="back" parallax={0.2} />
+      </a>
+      <a href="/lookbook" class="md:col-span-3 md:mt-[48%]" data-cursor="view" data-reveal>
+        <Editorial class="aspect-[3/4]" tone="#F4F4F1" word="SUN" category="tees" color="#FFC800" ink="#111111" design="wordmark" parallax={0.26} />
+      </a>
+    </div>
+  </div>
+</section>

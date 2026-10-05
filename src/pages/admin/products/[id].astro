@@ -1,0 +1,76 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AdminCard from '@/components/admin/AdminCard.astro';
+import Notice from '@/components/admin/Notice.astro';
+import Field from '@/components/ui/Field.astro';
+import Garment from '@/components/product/Garment';
+import { adminProducts } from '@/lib/server/admin-data';
+import { autoPrice } from '@/lib/pricing';
+import { formatMoney } from '@/lib/money';
+
+const p = adminProducts().find((x) => x.id === Astro.params.id);
+if (!p) return Astro.redirect('/admin/products');
+const suggested = autoPrice({ cost: p.cost, shippingShare: 450, targetMargin: p.category === 'tees' ? 0.45 : 0.4 });
+---
+
+<AdminLayout title={p.title} description={`${p.provider} · ${p.colors.length * p.sizes.length} variants`}>
+  <a slot="actions" href={`/shop/${p.category}/${p.slug}`} target="_blank" class="btn btn-outline btn-sm"><span>View</span></a>
+  <Notice>Editing writes to D1 (products, variants) once the sync has imported this product. Launch catalogue items are read-only here.</Notice>
+  <form method="post" class="grid gap-3 xl:grid-cols-3">
+    <div class="grid content-start gap-3 xl:col-span-2">
+      <AdminCard title="Details">
+        <div class="grid gap-4">
+          <Field label="Title" name="title" value={p.title} required />
+          <Field label="Tagline" name="tagline" value={p.tagline} />
+          <Field label="Description" name="description" as="textarea" value={p.description} />
+          <div class="grid gap-4 sm:grid-cols-2">
+            <Field label="Category" name="category" as="select" value={p.category} options={[{ value: 'tees', label: 'Tees' }, { value: 'hoodies', label: 'Hoodies' }]} />
+            <Field label="Fit" name="fit" as="select" value={p.fit} options={[{ value: 'oversized', label: 'Oversized' }, { value: 'regular', label: 'Regular' }]} />
+          </div>
+        </div>
+      </AdminCard>
+      <AdminCard title="Pricing" subtitle={`Suggested by rule: ${formatMoney(suggested, 'USD')}`}>
+        <div class="grid gap-4 sm:grid-cols-2">
+          <Field label="Price (USD)" name="price_usd" value={(p.price.USD / 100).toFixed(2)} inputmode="decimal" />
+          <Field label="Price (GBP, VAT incl.)" name="price_gbp" value={(p.price.GBP / 100).toFixed(2)} inputmode="decimal" />
+        </div>
+        <p class="mt-3 text-sm text-muted">Provider cost {formatMoney(p.cost, 'USD')} · margin {Math.round(p.margin * 100)}%</p>
+      </AdminCard>
+      <AdminCard title="SEO">
+        <div class="grid gap-4">
+          <Field label="SEO title" name="seo_title" value={`${p.title} · CharFlut`} hint="Under 60 characters." />
+          <Field label="Meta description" name="seo_description" as="textarea" value={p.description.slice(0, 155)} hint="Under 160 characters." />
+          <Field label="URL" name="slug" value={`/shop/${p.category}/${p.slug}`} />
+        </div>
+      </AdminCard>
+    </div>
+    <div class="grid content-start gap-3">
+      <AdminCard title="Status">
+        <Field label="Visibility" name="status" as="select" value={p.status} options={[{ value: 'active', label: 'Active (visible)' }, { value: 'draft', label: 'Draft' }, { value: 'hidden', label: 'Hidden' }]} />
+        <button class="btn btn-primary btn-block mt-4" disabled><span>Save</span></button>
+      </AdminCard>
+      <AdminCard title="Media and 3D">
+        <div class="grid grid-cols-2 gap-2">
+          {
+            p.colors.slice(0, 4).map((c) => (
+              <div class="aspect-square rounded-[var(--radius-md)] bg-[#2a2a2a] p-3">
+                <Garment category={p.category} color={c.hex} ink={c.ink} design={p.design} />
+              </div>
+            ))
+          }
+        </div>
+        <div class="mt-4 grid gap-4">
+          <Field label="3D model (R2 key)" name="model_r2_key" placeholder={`models/${p.category}.glb`} hint="GLB under 1.5 MB, Draco or Meshopt." />
+          <Field label="Print texture" name="design_key" value={p.design} />
+        </div>
+      </AdminCard>
+      <AdminCard title="Provider">
+        <dl class="grid gap-2 text-sm">
+          <div class="flex justify-between"><dt class="text-muted">Provider</dt><dd class="capitalize">{p.provider}</dd></div>
+          <div class="flex justify-between"><dt class="text-muted">Colours</dt><dd>{p.colors.map((c) => c.name).join(', ')}</dd></div>
+          <div class="flex justify-between"><dt class="text-muted">Sizes</dt><dd>{p.sizes.join(' ')}</dd></div>
+        </dl>
+      </AdminCard>
+    </div>
+  </form>
+</AdminLayout>

@@ -1,0 +1,25 @@
+---
+/** One mapping from order status to label and badge colour, used in account and admin. */
+import type { OrderStatus } from '@/lib/types';
+
+interface Props {
+  status: OrderStatus | string;
+}
+const { status } = Astro.props;
+const map: Record<string, [string, string]> = {
+  pending_payment: ['Awaiting payment', 'badge'],
+  paid: ['Paid', 'badge badge-success'],
+  in_production: ['Printing', 'badge badge-warn'],
+  shipped: ['Shipped', 'badge badge-success'],
+  delivered: ['Delivered', 'badge badge-dark'],
+  cancelled: ['Cancelled', 'badge'],
+  refunded: ['Refunded', 'badge'],
+  needs_attention: ['Needs attention', 'badge badge-danger'],
+  queued: ['Queued', 'badge'],
+  created: ['Draft at provider', 'badge'],
+  failed: ['Failed', 'badge badge-danger'],
+};
+const [label, cls] = map[status] ?? [status, 'badge'];
+---
+
+<span class={cls}>{label}</span>

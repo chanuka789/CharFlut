@@ -1,0 +1,24 @@
+---
+/** Ranked horizontal bars with direct labels (top products, sales by country). One hue; value as text. */
+interface Props {
+  items: { label: string; value: number; display: string }[];
+}
+const { items } = Astro.props;
+const max = Math.max(1, ...items.map((i) => i.value));
+---
+
+<ol class="space-y-3.5">
+  {
+    items.map((it) => (
+      <li title={`${it.label}: ${it.display}`}>
+        <div class="mb-1.5 flex justify-between gap-3 text-sm">
+          <span class="truncate">{it.label}</span>
+          <span class="shrink-0 font-semibold tabular-nums">{it.display}</span>
+        </div>
+        <div class="h-2 rounded-full bg-[#2a2a2a]">
+          <div class="h-2 rounded-full bg-brand" style={`width:${Math.max(2, (it.value / max) * 100)}%`} />
+        </div>
+      </li>
+    ))
+  }
+</ol>

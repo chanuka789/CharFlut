@@ -1,0 +1,83 @@
+---
+/**
+ * Global footer (plan 04): newsletter, link columns, currency switch, payment logos, social links,
+ * and a giant CHARFLUT wordmark that reveals on scroll.
+ */
+import Logo from '@/components/ui/Logo.astro';
+import Icon from '@/components/ui/Icon.astro';
+import NewsletterForm from '@/components/commerce/NewsletterForm.astro';
+import { footerNav, social } from '@/lib/nav';
+
+const year = new Date().getFullYear();
+---
+
+<footer data-theme="dark" class="relative overflow-hidden bg-bg text-ink">
+  <div class="cf-container pt-[clamp(56px,8vw,120px)]">
+    <div class="grid gap-12 lg:grid-cols-12">
+      <div class="lg:col-span-5">
+        <Logo variant="reversed" height={30} class="mb-8 h-[30px] w-auto" />
+        <h2 class="t-h2 max-w-md">Get first access to every drop.</h2>
+        <p class="t-muted mt-3 max-w-md">One email per drop. 10% off your first order. Unsubscribe any time.</p>
+        <NewsletterForm class="mt-6 max-w-md" source="footer" />
+      </div>
+      <nav aria-label="Footer" class="grid grid-cols-2 gap-8 sm:grid-cols-3 lg:col-span-6 lg:col-start-7">
+        {
+          footerNav.map((col) => (
+            <div>
+              <h3 class="t-label mb-4 text-muted">{col.title}</h3>
+              <ul class="space-y-2.5">
+                {col.links.map((l) => (
+                  <li>
+                    <a href={l.href} class="cf-link text-[0.9375rem]">
+                      {l.label}
+                    </a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))
+        }
+      </nav>
+    </div>
+
+    <div class="mt-16 flex flex-col gap-6 border-t border-line py-8 md:flex-row md:items-center md:justify-between">
+      <div class="flex flex-wrap items-center gap-4">
+        <label class="flex items-center gap-2 text-sm">
+          <Icon name="globe" size={18} />
+          <span class="sr-only">Currency</span>
+          <select data-currency-switch class="input !min-h-10 !w-auto !py-2 !pl-3 text-sm" aria-label="Currency">
+            <option value="USD">United States · $ USD</option>
+            <option value="GBP">United Kingdom · £ GBP</option>
+          </select>
+        </label>
+        <ul class="flex items-center gap-2" aria-label="Payment methods">
+          {
+            ['VISA', 'Mastercard', 'PayPal'].map((m) => (
+              <li class="rounded-[var(--radius-sm)] border border-line px-2.5 py-1 text-[11px] font-bold tracking-wide text-muted">{m}</li>
+            ))
+          }
+        </ul>
+      </div>
+      <ul class="flex items-center gap-1">
+        {
+          social.map((s) => (
+            <li>
+              <a href={s.href} class="icon-btn" aria-label={s.label} rel="noopener" target="_blank">
+                <Icon name={s.icon} />
+              </a>
+            </li>
+          ))
+        }
+      </ul>
+    </div>
+    <p class="t-small t-muted pb-6">© {year} CharFlut. Printed on demand for the US and UK.</p>
+  </div>
+
+  <p
+    aria-hidden="true"
+    data-wordmark
+    class="flex select-none justify-center overflow-hidden px-[2vw] pb-[1vw] font-display text-[20.5vw] font-black leading-[0.78] tracking-[-0.06em] text-brand"
+  >
+    {'CHARFLUT'.split('').map((ch) => <span class="inline-block">{ch}</span>)}
+  </p>
+</footer>

@@ -1,0 +1,74 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AdminCard from '@/components/admin/AdminCard.astro';
+import { getEnv } from '@/lib/server/db';
+
+if (Astro.locals.staff?.role !== 'owner') return Astro.redirect('/admin');
+const env = getEnv();
+const secret = (v?: string) => (v ? 'Set' : 'Missing');
+const groups: [string, [string, string][]][] = [
+  [
+    'Store',
+    [
+      ['Site URL', env.SITE_URL],
+      ['Currencies', env.STORE_CURRENCIES],
+      ['Free shipping', `$${env.FREE_SHIPPING_USD} US · £${env.FREE_SHIPPING_GBP} UK`],
+      ['Ships to', 'United States, United Kingdom'],
+    ],
+  ],
+  [
+    'Payments',
+    [
+      ['WebXPay endpoint', env.WEBXPAY_BASE_URL.includes('staging') ? 'Staging' : 'Live'],
+      ['WEBXPAY_SECRET_KEY', secret(env.WEBXPAY_SECRET_KEY)],
+      ['WEBXPAY_PUBLIC_KEY', secret(env.WEBXPAY_PUBLIC_KEY)],
+      ['PayPal', env.PAYPAL_CLIENT_ID ? `On (${env.PAYPAL_ENV ?? 'sandbox'})` : 'Off (phase 2)'],
+    ],
+  ],
+  [
+    'Providers',
+    [
+      ['PRINTIFY_API_TOKEN', secret(env.PRINTIFY_API_TOKEN)],
+      ['PRINTIFY_SHOP_ID', secret(env.PRINTIFY_SHOP_ID)],
+      ['PRINTFUL_API_TOKEN', secret(env.PRINTFUL_API_TOKEN)],
+      ['WEBHOOK_SECRET_PATH', secret(env.WEBHOOK_SECRET_PATH)],
+    ],
+  ],
+  [
+    'Security and email',
+    [
+      ['ACCESS_AUD', secret(env.ACCESS_AUD)],
+      ['ADMIN_OWNERS', env.ADMIN_OWNERS ? `${env.ADMIN_OWNERS.split(',').length} email(s)` : 'Missing'],
+      ['TURNSTILE_SECRET_KEY', secret(env.TURNSTILE_SECRET_KEY)],
+      ['EMAIL_API_KEY', secret(env.EMAIL_API_KEY)],
+    ],
+  ],
+];
+---
+
+<AdminLayout title="Settings" description="Read-only view. Secrets are set with wrangler, never in the browser.">
+  <div class="grid gap-3 lg:grid-cols-2">
+    {
+      groups.map(([title, items]) => (
+        <AdminCard title={title}>
+          <dl class="grid gap-2.5 text-sm">
+            {items.map(([k, v]) => (
+              <div class="flex justify-between gap-4">
+                <dt class="truncate text-muted">{k}</dt>
+                <dd class:list={['shrink-0', v === 'Missing' && 'font-semibold text-danger', v === 'Set' && 'font-semibold text-[#a6e3b4]']}>{v}</dd>
+              </div>
+            ))}
+          </dl>
+        </AdminCard>
+      ))
+    }
+  </div>
+  <AdminCard title="Staff roles" class="mt-3">
+    <ul class="grid gap-2 text-sm">
+      <li><strong>Owner</strong> <span class="text-muted">— everything, including settings and the audit log</span></li>
+      <li><strong>Manager</strong> <span class="text-muted">— products, orders, customers; no settings</span></li>
+      <li><strong>Support</strong> <span class="text-muted">— orders and inbox only</span></li>
+    </ul>
+    <p class="mt-3 text-sm text-muted">Who can open /admin is set in Cloudflare Zero Trust → Access. Roles come from ADMIN_OWNERS and ADMIN_MANAGERS; anyone else Access lets in is Support.</p>
+  </AdminCard>
+</AdminLayout>

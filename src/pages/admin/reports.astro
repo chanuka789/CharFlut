@@ -1,0 +1,49 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import QueryTable from '@/components/admin/QueryTable.astro';
+import { formatMoney } from '@/lib/money';
+
+const m = (v: unknown, r: Record<string, unknown>) => formatMoney(Number(v ?? 0), r.currency as 'USD' | 'GBP');
+const paid = "status IN ('paid','in_production','shipped','delivered')";
+---
+
+<AdminLayout title="Reports" description="Sales by month, country and provider; profit after costs and fees (phase 3)">
+  <h2 class="t-label mb-3 text-muted">By month and currency</h2>
+  <QueryTable
+    sql={`SELECT strftime('%Y-%m', created_at) AS month, currency, COUNT(*) AS orders, SUM(total) AS sales, SUM(COALESCE(payment_fee,0)) AS fees,
+      SUM(COALESCE(provider_cost,0) + COALESCE(provider_shipping,0)) AS costs,
+      SUM(total - COALESCE(payment_fee,0) - COALESCE(provider_cost,0) - COALESCE(provider_shipping,0) - tax) AS profit
+      FROM orders WHERE ${paid} GROUP BY month, currency ORDER BY month DESC`}
+    empty="No paid orders yet."
+    columns={[
+      { key: 'month', label: 'Month', class: 'font-semibold' },
+      { key: 'currency', label: 'Currency' },
+      { key: 'orders', label: 'Orders' },
+      { key: 'sales', label: 'Sales', format: m },
+      { key: 'fees', label: 'Payment fees', format: m },
+      { key: 'costs', label: 'Provider costs', format: m },
+      { key: 'profit', label: 'Profit after tax', format: m },
+    ]}
+  />
+  <h2 class="t-label mb-3 mt-8 text-muted">By country</h2>
+  <QueryTable
+    sql={`SELECT country, currency, COUNT(*) AS orders, SUM(total) AS sales FROM orders WHERE ${paid} GROUP BY country, currency`}
+    empty="No sales yet."
+    columns={[
+      { key: 'country', label: 'Country', format: (v) => (v === 'GB' ? 'United Kingdom' : 'United States'), class: 'font-semibold' },
+      { key: 'orders', label: 'Orders' },
+      { key: 'sales', label: 'Sales', format: m },
+    ]}
+  />
+  <h2 class="t-label mb-3 mt-8 text-muted">By provider</h2>
+  <QueryTable
+    sql={`SELECT i.provider, o.currency, SUM(i.quantity) AS units, SUM(i.quantity * i.unit_price) AS sales FROM order_items i JOIN orders o ON o.id = i.order_id WHERE o.${paid} GROUP BY i.provider, o.currency`}
+    empty="No sales yet."
+    columns={[
+      { key: 'provider', label: 'Provider', class: 'capitalize font-semibold' },
+      { key: 'currency', label: 'Currency' },
+      { key: 'units', label: 'Units' },
+      { key: 'sales', label: 'Sales', format: m },
+    ]}
+  />
+</AdminLayout>

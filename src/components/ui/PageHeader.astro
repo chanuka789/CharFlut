@@ -1,0 +1,42 @@
+---
+/** Title band at the top of inner pages: breadcrumbs, big title, lead, and an optional meta slot (e.g. product count). */
+import Breadcrumbs from './Breadcrumbs.astro';
+
+interface Props {
+  title: string;
+  eyebrow?: string;
+  lead?: string;
+  crumbs?: { label: string; href?: string }[];
+  tone?: 'light' | 'paper' | 'dark';
+  outlineWord?: string;
+}
+const { title, eyebrow, lead, crumbs, tone = 'light', outlineWord } = Astro.props;
+---
+
+<section
+  data-theme={tone === 'dark' ? 'dark' : undefined}
+  class:list={[
+    'relative overflow-hidden text-ink',
+    tone === 'paper' ? 'bg-surface' : 'bg-bg',
+    'pt-[calc(var(--header-h)+var(--bar-h)+clamp(24px,5vw,72px))] pb-[clamp(32px,5vw,72px)]',
+  ]}
+>
+  <div class="cf-container relative">
+    {crumbs && <Breadcrumbs items={crumbs} class="mb-6" />}
+    {eyebrow && <p class="t-label t-muted mb-4" data-reveal>{eyebrow}</p>}
+    <h1 class="t-h1 max-w-5xl" data-split>{title}</h1>
+    {lead && <p class="t-lead mt-5 max-w-2xl" data-reveal>{lead}</p>}
+    <div class="mt-6 empty:hidden"><slot /></div>
+  </div>
+  {
+    outlineWord && (
+      <p
+        aria-hidden="true"
+        class="t-display t-outline-ink pointer-events-none absolute -right-[2vw] bottom-[-0.18em] select-none opacity-20"
+        data-parallax="0.25"
+      >
+        {outlineWord}
+      </p>
+    )
+  }
+</section>

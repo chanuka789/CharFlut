@@ -1,0 +1,81 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import Notice from '@/components/admin/Notice.astro';
+import StatusBadge from '@/components/commerce/StatusBadge.astro';
+import { listOrders } from '@/lib/server/admin-data';
+import { formatMoney } from '@/lib/money';
+
+const status = Astro.url.searchParams.get('status') ?? '';
+const q = Astro.url.searchParams.get('q') ?? '';
+const { sample, orders } = await listOrders({ status: status || undefined, q: q || undefined });
+const filters = [
+  ['', 'All'],
+  ['needs_attention', 'Needs attention'],
+  ['pending_payment', 'Awaiting payment'],
+  ['paid', 'Paid'],
+  ['in_production', 'Printing'],
+  ['shipped', 'Shipped'],
+  ['delivered', 'Delivered'],
+  ['refunded', 'Refunded'],
+];
+const fmt = (s: string) => new Date(s.replace(' ', 'T') + 'Z').toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+---
+
+<AdminLayout title="Orders" description="Every order, its payment and provider status">
+  {sample && <Notice>Sample data (local database has no orders yet).</Notice>}
+  <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+    <nav aria-label="Filter orders" class="no-scrollbar -mx-4 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
+      {
+        filters.map(([v, l]) => (
+          <a href={v ? `?status=${v}` : '?'} class="chip shrink-0 !min-h-9 text-sm" aria-current={status === v ? 'true' : undefined}>
+            {l}
+          </a>
+        ))
+      }
+    </nav>
+    <form class="flex gap-2 md:hidden" role="search">
+      <input name="q" value={q} placeholder="Order or email" class="input flex-1 !min-h-10 !py-2 text-sm" aria-label="Search orders" />
+      {status && <input type="hidden" name="status" value={status} />}
+      <button class="btn btn-outline btn-sm"><span>Search</span></button>
+    </form>
+  </div>
+
+  {
+    orders.length ? (
+      <div class="rounded-[var(--radius-lg)] border border-line bg-surface md:overflow-hidden">
+        <table class="table table-stack">
+          <thead>
+            <tr>
+              <th>Order</th>
+              <th>Date</th>
+              <th>Customer</th>
+              <th>Items</th>
+              <th>Provider</th>
+              <th>Status</th>
+              <th class="text-right">Total</th>
+            </tr>
+          </thead>
+          <tbody>
+            {orders.map((o) => (
+              <tr>
+                <td data-label="Order">
+                  <a href={`/admin/orders/${o.number}`} class="font-semibold underline-offset-4 hover:underline">
+                    {o.number}
+                  </a>
+                </td>
+                <td data-label="Date" class="whitespace-nowrap text-muted">{fmt(o.created_at)}</td>
+                <td data-label="Customer" class="break-all md:max-w-[220px] md:truncate md:break-normal">{o.email}</td>
+                <td data-label="Items">{o.items}</td>
+                <td data-label="Provider" class="capitalize text-muted">{o.providers}</td>
+                <td data-label="Status"><StatusBadge status={o.status} /></td>
+                <td data-label="Total" class="t-price md:text-right">{formatMoney(o.total, o.currency)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    ) : (
+      <p class="panel text-center text-muted">No orders match.</p>
+    )
+  }
+</AdminLayout>

@@ -1,0 +1,21 @@
+---
+/** Uses the official logo SVGs from public/brand. Never redraw or stretch (logo-usage.md). */
+interface Props {
+  variant?: 'primary' | 'reversed' | 'icon' | 'stacked' | 'mono-white' | 'mono-black';
+  class?: string;
+  height?: number;
+}
+const { variant = 'primary', class: className, height = 28 } = Astro.props;
+const dims = {
+  primary: [411, 100],
+  reversed: [411, 100],
+  'mono-white': [411, 100],
+  'mono-black': [411, 100],
+  icon: [100, 100],
+  stacked: [287, 200],
+}[variant];
+const width = Math.round((dims[0] / dims[1]) * height);
+const file = variant === 'icon' ? 'icon' : `logo-${variant}`;
+---
+
+<img src={`/brand/${file}.svg`} alt="CharFlut" width={width} height={height} class={className} decoding="async" />

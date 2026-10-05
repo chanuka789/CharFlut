@@ -1,0 +1,29 @@
+---
+/** Looping text strip (plan 02: "NEW DROP • FREE SHIPPING OVER $60 •"). Pauses on hover, stops for reduced motion. */
+interface Props {
+  items: string[];
+  tone?: 'brand' | 'dark' | 'light';
+  size?: 'sm' | 'lg';
+  speed?: number;
+}
+const { items, tone = 'dark', size = 'lg', speed = 38 } = Astro.props;
+const toneClass = {
+  brand: 'bg-brand text-on-brand',
+  dark: 'bg-black text-white',
+  light: 'bg-bg text-ink border-y border-line',
+}[tone];
+const textClass = size === 'lg' ? 'font-display font-black uppercase text-[clamp(1.5rem,4vw,3.5rem)] tracking-tight' : 't-label';
+const track = items.flatMap((t) => [t, '•']);
+---
+
+<div class:list={['marquee', toneClass, size === 'lg' ? 'py-4 md:py-6' : 'py-2.5']} style={`--marquee-speed:${speed}s`}>
+  {
+    [0, 1].map((n) => (
+      <div class="marquee-track" aria-hidden={n === 1 ? 'true' : undefined}>
+        {track.map((t) => (
+          <span class={textClass}>{t}</span>
+        ))}
+      </div>
+    ))
+  }
+</div>

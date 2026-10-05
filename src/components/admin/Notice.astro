@@ -1,0 +1,21 @@
+---
+/** Inline notice for sample data, phase status or warnings. */
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+
+interface Props {
+  tone?: 'info' | 'warn' | 'danger';
+  icon?: IconName;
+}
+const { tone = 'info', icon = tone === 'info' ? 'sparkle' : 'alert' } = Astro.props;
+const cls = {
+  info: 'border-line bg-surface text-muted',
+  warn: 'border-[#6b5300] bg-[#2a2306] text-[#ffe08a]',
+  danger: 'border-danger/50 bg-[#2a1414] text-[#ffb3b3]',
+}[tone];
+---
+
+<div class:list={['mb-6 flex items-start gap-3 rounded-[var(--radius-md)] border px-4 py-3 text-sm', cls]} role={tone === 'info' ? 'note' : 'alert'}>
+  <Icon name={icon} size={18} class="mt-0.5 shrink-0" />
+  <div class="min-w-0 flex-1"><slot /></div>
+</div>

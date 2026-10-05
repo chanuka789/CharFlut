@@ -1,0 +1,83 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import KpiCard from '@/components/admin/KpiCard.astro';
+import AdminCard from '@/components/admin/AdminCard.astro';
+import AreaChart from '@/components/admin/AreaChart.astro';
+import BarList from '@/components/admin/BarList.astro';
+import Notice from '@/components/admin/Notice.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { getOverview, adminProducts } from '@/lib/server/admin-data';
+import { configuredProviders } from '@/lib/providers';
+import { getEnv } from '@/lib/server/db';
+import { formatMoney } from '@/lib/money';
+
+const o = await getOverview();
+const env = getEnv();
+const providers = configuredProviders(env);
+const lowMargin = adminProducts().filter((p) => p.margin < 0.3);
+const total30 = o.series.reduce((s, d) => s + d.sales, 0);
+const usd = (n: number) => formatMoney(n, 'USD');
+---
+
+<AdminLayout title="Overview" description="Today at a glance">
+  {o.sample && <Notice>Showing <strong>sample data</strong> because the local database has no orders yet. Live data appears automatically.</Notice>}
+  {
+    o.needsAttention > 0 && (
+      <Notice tone="danger">
+        <a href="/admin/orders?status=needs_attention" class="underline">
+          {o.needsAttention} order{o.needsAttention > 1 ? 's need' : ' needs'} attention
+        </a>{' '}
+        — payment amount to confirm or a provider error.
+      </Notice>
+    )
+  }
+  {!env.WEBXPAY_PUBLIC_KEY && <Notice tone="warn">WebXPay keys are not set, so checkout cannot take payments yet. See Settings → Payments.</Notice>}
+
+  <div class="grid grid-cols-2 gap-3 xl:grid-cols-4">
+    <KpiCard label="Sales today" value={usd(o.today.sales)} icon="chart" note="Paid orders, USD equivalent" />
+    <KpiCard label="Orders today" value={String(o.today.orders)} icon="box" href="/admin/orders" />
+    <KpiCard label="Avg. order" value={usd(o.today.aov)} icon="tag" />
+    <KpiCard label="Conversion" value={o.today.conversion == null ? '—' : `${(o.today.conversion * 100).toFixed(1)}%`} icon="percent" note={o.today.conversion == null ? 'Connect Web Analytics' : 'Visitors who ordered'} />
+  </div>
+
+  <div class="mt-3 grid gap-3 xl:grid-cols-3">
+    <AdminCard title="Sales, last 30 days" subtitle={`${usd(total30)} in total`} class="xl:col-span-2">
+      <AreaChart data={o.series} label="Daily sales for the last 30 days" />
+    </AdminCard>
+    <AdminCard title="Alerts">
+      <ul class="space-y-3 text-sm">
+        <li class="flex items-center justify-between gap-3">
+          <span class="flex items-center gap-2"><Icon name="alert" size={16} class={o.needsAttention ? 'text-danger' : 'text-muted'} /> Needs attention</span>
+          <a href="/admin/orders?status=needs_attention" class="font-semibold">{o.needsAttention}</a>
+        </li>
+        <li class="flex items-center justify-between gap-3">
+          <span class="flex items-center gap-2"><Icon name="card" size={16} class="text-muted" /> Awaiting payment</span>
+          <a href="/admin/orders?status=pending_payment" class="font-semibold">{o.pending}</a>
+        </li>
+        <li class="flex items-center justify-between gap-3">
+          <span class="flex items-center gap-2"><Icon name="percent" size={16} class={lowMargin.length ? 'text-danger' : 'text-muted'} /> Margin under 30%</span>
+          <a href="/admin/pricing" class="font-semibold">{lowMargin.length}</a>
+        </li>
+        {
+          providers.map((p) => (
+            <li class="flex items-center justify-between gap-3">
+              <span class="flex items-center gap-2 capitalize">
+                <Icon name="plug" size={16} class="text-muted" /> {p.id}
+              </span>
+              <span class={p.ok ? 'badge badge-success' : 'badge badge-warn'}>{p.ok ? 'Connected' : 'Not set up'}</span>
+            </li>
+          ))
+        }
+      </ul>
+    </AdminCard>
+  </div>
+
+  <div class="mt-3 grid gap-3 lg:grid-cols-2">
+    <AdminCard title="Top products" subtitle="Units sold" href="/admin/products">
+      {o.topProducts.length ? <BarList items={o.topProducts.map((p) => ({ label: p.title, value: p.units, display: String(p.units) }))} /> : <p class="text-sm text-muted">No sales yet.</p>}
+    </AdminCard>
+    <AdminCard title="Sales by country" href="/admin/reports">
+      {o.byCountry.length ? <BarList items={o.byCountry.map((c) => ({ label: c.country, value: c.sales, display: usd(c.sales) }))} /> : <p class="text-sm text-muted">No sales yet.</p>}
+    </AdminCard>
+  </div>
+</AdminLayout>

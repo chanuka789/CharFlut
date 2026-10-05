@@ -1,0 +1,55 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AdminCard from '@/components/admin/AdminCard.astro';
+import PriceCalculator from '@/components/admin/PriceCalculator';
+import { adminProducts } from '@/lib/server/admin-data';
+import { formatMoney } from '@/lib/money';
+
+const rules = [
+  { category: 'Tees', margin: 0.45, shipping: 450, fee: 0.0485 },
+  { category: 'Hoodies', margin: 0.4, shipping: 450, fee: 0.0485 },
+];
+const low = adminProducts().filter((p) => p.margin < 0.35);
+---
+
+<AdminLayout title="Pricing rules" description="Price = (cost + shipping share) ÷ (1 − margin − payment fee), rounded to .99">
+  <div class="grid gap-3 xl:grid-cols-2">
+    <AdminCard title="Rules by product type" flush>
+      <table class="table table-stack">
+        <thead><tr><th>Type</th><th>Target margin</th><th>Shipping share</th><th>Payment fee</th><th>Rounding</th></tr></thead>
+        <tbody>
+          {
+            rules.map((r) => (
+              <tr>
+                <td data-label="Type" class="font-semibold">{r.category}</td>
+                <td data-label="Target margin">{Math.round(r.margin * 100)}%</td>
+                <td data-label="Shipping share">{formatMoney(r.shipping, 'USD')}</td>
+                <td data-label="Payment fee">{(r.fee * 100).toFixed(2)}% (WebXPay foreign card)</td>
+                <td data-label="Rounding">.99</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </AdminCard>
+    <AdminCard title="Price calculator">
+      <PriceCalculator client:load />
+    </AdminCard>
+  </div>
+  <AdminCard title="Products below 35% margin" class="mt-3" href="/admin/products">
+    {
+      low.length ? (
+        <ul class="divide-y divide-line text-sm">
+          {low.map((p) => (
+            <li class="flex justify-between py-2.5">
+              <a href={`/admin/products/${p.id}`} class="font-semibold">{p.title}</a>
+              <span class="badge badge-warn">{Math.round(p.margin * 100)}%</span>
+            </li>
+          ))}
+        </ul>
+      ) : (
+        <p class="text-sm text-muted">All products are above 35%.</p>
+      )
+    }
+  </AdminCard>
+</AdminLayout>

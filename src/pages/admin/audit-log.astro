@@ -1,0 +1,20 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import QueryTable from '@/components/admin/QueryTable.astro';
+
+if (Astro.locals.staff?.role !== 'owner') return Astro.redirect('/admin');
+---
+
+<AdminLayout title="Audit log" description="Who changed what and when">
+  <QueryTable
+    sql="SELECT at, actor, action, entity, entity_id FROM audit_log ORDER BY id DESC LIMIT 300"
+    empty="No changes recorded yet."
+    columns={[
+      { key: 'at', label: 'When', class: 'text-muted whitespace-nowrap' },
+      { key: 'actor', label: 'Who' },
+      { key: 'action', label: 'Action', class: 'font-mono text-xs' },
+      { key: 'entity', label: 'Entity' },
+      { key: 'entity_id', label: 'ID', class: 'font-mono text-xs' },
+    ]}
+  />
+</AdminLayout>

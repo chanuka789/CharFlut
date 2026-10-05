@@ -1,0 +1,44 @@
+---
+import AccountLayout from '@/layouts/AccountLayout.astro';
+import EmptyState from '@/components/ui/EmptyState.astro';
+import StatusBadge from '@/components/commerce/StatusBadge.astro';
+import { customerOrders, requireCustomer } from '@/lib/server/account';
+import { formatMoney } from '@/lib/money';
+
+const customer = await requireCustomer(Astro);
+if (customer instanceof Response) return customer;
+const orders = await customerOrders(customer);
+const fmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+---
+
+<AccountLayout title="Orders" customer={customer}>
+  {
+    orders.length ? (
+      <table class="table table-stack">
+        <thead>
+          <tr><th>Order</th><th>Date</th><th>Items</th><th>Status</th><th>Total</th><th><span class="sr-only">Actions</span></th></tr>
+        </thead>
+        <tbody>
+          {orders.map((o) => (
+            <tr>
+              <td data-label="Order" class="font-semibold">{o.number}</td>
+              <td data-label="Date">{fmt.format(new Date(o.created_at.replace(' ', 'T') + 'Z'))}</td>
+              <td data-label="Items">{o.items}</td>
+              <td data-label="Status"><StatusBadge status={o.status} /></td>
+              <td data-label="Total" class="t-price">{formatMoney(o.total, o.currency)}</td>
+              <td data-label="">
+                <form method="post" action="/track-order">
+                  <input type="hidden" name="number" value={o.number} />
+                  <input type="hidden" name="email" value={customer.email} />
+                  <button class="btn btn-outline btn-sm"><span>Track</span></button>
+                </form>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ) : (
+      <EmptyState icon="box" title="No orders yet" body="When you place an order, it shows up here with tracking." ctaLabel="Start shopping" ctaHref="/shop" />
+    )
+  }
+</AccountLayout>

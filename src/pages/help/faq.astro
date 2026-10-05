@@ -1,0 +1,47 @@
+---
+import ContentLayout from '@/layouts/ContentLayout.astro';
+import Accordion from '@/components/ui/Accordion.astro';
+
+const groups = [
+  {
+    title: 'Orders',
+    items: [
+      { title: 'What does “printed on demand” mean?', body: '<p>Your piece is printed after you order it. That means less waste and no unsold stock, and it takes 2–5 working days to print before shipping.</p>' },
+      { title: 'Can I change or cancel my order?', body: '<p>Contact us within 2 hours of ordering. After that, your item may already be printing.</p>' },
+      { title: 'Why did my order arrive in two parcels?', body: '<p>We work with two print partners. Items from each one ship separately, each with tracking.</p>' },
+    ],
+  },
+  {
+    title: 'Payment',
+    items: [
+      { title: 'How can I pay?', body: '<p>Visa and Mastercard through WebXPay’s secure payment page. PayPal is coming soon.</p>' },
+      { title: 'Which currency am I charged in?', body: '<p>US orders are charged in USD and UK orders in GBP. You can switch the display currency in the footer.</p>' },
+      { title: 'Is my card safe?', body: '<p>Yes. You enter your card on WebXPay’s secure page. CharFlut never sees or stores your card number.</p>' },
+    ],
+  },
+  {
+    title: 'Products and care',
+    items: [
+      { title: 'How do the oversized pieces fit?', body: '<p>Take your usual size for a relaxed look, or one size down for a closer fit. See the <a href="/help/size-guide">size guide</a>.</p>' },
+      { title: 'How do I wash my print?', body: '<p>Wash cold, inside out. Tumble dry low or hang dry. Do not iron on the print.</p>' },
+    ],
+  },
+];
+const faqLd = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: groups.flatMap((g) => g.items.map((i) => ({ '@type': 'Question', name: i.title, acceptedAnswer: { '@type': 'Answer', text: i.body.replace(/<[^>]+>/g, '') } }))),
+};
+---
+
+<ContentLayout section="help" title="FAQ" heading="Questions, answered" eyebrow="FAQ" jsonLd={faqLd}>
+  {
+    groups.map((g) => (
+      <>
+        <h2>{g.title}</h2>
+        <Accordion items={g.items} />
+      </>
+    ))
+  }
+  <p class="mt-10">Still stuck? <a href="/contact">Contact us</a>. We reply within one working day.</p>
+</ContentLayout>

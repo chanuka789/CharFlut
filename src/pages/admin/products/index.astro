@@ -1,0 +1,63 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import Garment from '@/components/product/Garment';
+import { adminProducts } from '@/lib/server/admin-data';
+import { formatMoney } from '@/lib/money';
+
+const list = adminProducts();
+const status = Astro.url.searchParams.get('status') ?? '';
+const shown = status ? list.filter((p) => p.status === status) : list;
+---
+
+<AdminLayout title="Products" description="Imported from Printify and Printful; publish when ready">
+  <a slot="actions" href="/admin/providers" class="btn btn-primary btn-sm"><span>Import</span></a>
+  <nav aria-label="Filter products" class="no-scrollbar -mx-4 mb-5 flex gap-2 overflow-x-auto px-4 md:mx-0 md:px-0">
+    {
+      [
+        ['', `All (${list.length})`],
+        ['active', 'Active'],
+        ['draft', 'Drafts'],
+        ['hidden', 'Hidden'],
+      ].map(([v, l]) => (
+        <a href={v ? `?status=${v}` : '?'} class="chip shrink-0 !min-h-9 text-sm" aria-current={status === v ? 'true' : undefined}>
+          {l}
+        </a>
+      ))
+    }
+  </nav>
+  <div class="rounded-[var(--radius-lg)] border border-line bg-surface md:overflow-hidden">
+    <table class="table table-stack">
+      <thead>
+        <tr><th>Product</th><th>Status</th><th>Provider</th><th>Variants</th><th>Price</th><th>Cost</th><th>Margin</th></tr>
+      </thead>
+      <tbody>
+        {
+          shown.map((p) => (
+            <tr>
+              <td data-label="Product">
+                <a href={`/admin/products/${p.id}`} class="flex items-center gap-3 text-left">
+                  <span class="block size-12 shrink-0 rounded-[var(--radius-sm)] bg-[#2a2a2a] p-1">
+                    <Garment category={p.category} color={p.colors[0].hex} ink={p.colors[0].ink} design={p.design} />
+                  </span>
+                  <span>
+                    <span class="block font-semibold">{p.title}</span>
+                    <span class="block text-xs capitalize text-muted">{p.category} · {p.fit}</span>
+                  </span>
+                </a>
+              </td>
+              <td data-label="Status"><span class={p.status === 'active' ? 'badge badge-success' : 'badge'}>{p.status}</span></td>
+              <td data-label="Provider" class="capitalize">{p.provider}</td>
+              <td data-label="Variants">{p.colors.length * p.sizes.length}</td>
+              <td data-label="Price" class="whitespace-nowrap">{formatMoney(p.price.USD, 'USD')} · {formatMoney(p.price.GBP, 'GBP')}</td>
+              <td data-label="Cost" class="text-muted">{formatMoney(p.cost, 'USD')}</td>
+              <td data-label="Margin">
+                <span class={p.margin < 0.3 ? 'badge badge-danger' : p.margin < 0.4 ? 'badge badge-warn' : 'badge badge-success'}>{Math.round(p.margin * 100)}%</span>
+              </td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+  <p class="mt-4 text-sm text-muted">Costs are placeholders until the first provider sync. Margin = (price − provider cost − shipping share − payment fee) ÷ price.</p>
+</AdminLayout>

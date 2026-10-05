@@ -1,0 +1,40 @@
+---
+/** Search results page (the overlay's "Enter" target, and a no-JS fallback). */
+import StoreLayout from '@/layouts/StoreLayout.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import ProductGrid from '@/components/commerce/ProductGrid.astro';
+import { bestSellers, products } from '@/data/catalog';
+
+const q = (Astro.url.searchParams.get('q') ?? '').trim().slice(0, 80);
+const terms = q.toLowerCase().split(/\s+/).filter(Boolean);
+const results = terms.length
+  ? products.filter((p) => {
+      const hay = [p.title, p.category, p.fit, p.design, p.tagline, ...p.colors.map((c) => c.name)].join(' ').toLowerCase();
+      return terms.every((t) => hay.includes(t));
+    })
+  : [];
+---
+
+<StoreLayout title={q ? `Search: ${q}` : 'Search'} noindex>
+  <PageHeader title={q ? `“${q}”` : 'Search'} eyebrow={q ? `${results.length} results` : undefined} crumbs={[{ label: 'Home', href: '/' }, { label: 'Search' }]}>
+    <form action="/search" role="search" class="flex max-w-xl gap-2">
+      <label for="q" class="sr-only">Search products</label>
+      <input id="q" name="q" value={q} class="input flex-1" placeholder="Search tees, hoodies, prints" type="search" />
+      <button class="btn btn-dark" type="submit"><span>Search</span></button>
+    </form>
+  </PageHeader>
+  <section class="bg-bg pb-[var(--section-y)]">
+    <div class="cf-container">
+      {
+        results.length ? (
+          <ProductGrid products={results} />
+        ) : (
+          <>
+            {q && <p class="t-lead mb-10">Nothing matches that yet. These are our best sellers.</p>}
+            <ProductGrid products={bestSellers().slice(0, 4)} />
+          </>
+        )
+      }
+    </div>
+  </section>
+</StoreLayout>

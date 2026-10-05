@@ -1,0 +1,35 @@
+---
+import StoreLayout from '@/layouts/StoreLayout.astro';
+import Hero from '@/components/home/Hero.astro';
+import DropRail from '@/components/home/DropRail.astro';
+import CategoryTiles from '@/components/home/CategoryTiles.astro';
+import FlatToFabric from '@/components/home/FlatToFabric.astro';
+import LookbookTeaser from '@/components/home/LookbookTeaser.astro';
+import NewsletterBand from '@/components/home/NewsletterBand.astro';
+import Marquee from '@/components/ui/Marquee.astro';
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import ProductGrid from '@/components/commerce/ProductGrid.astro';
+import { bestSellers, drops, getProduct } from '@/data/catalog';
+import type { Product } from '@/lib/types';
+
+const drop = drops[0];
+const dropProducts = drop.productSlugs.map(getProduct).filter(Boolean) as Product[];
+// Reviews (plan 04 #8) stay hidden until real customer reviews exist.
+const reviews: unknown[] = [];
+---
+
+<StoreLayout title="CharFlut" headerOverlay>
+  <Hero dropHref={`/drops/${drop.slug}`} />
+  <Marquee tone="brand" items={['New drop: First Light', 'Free US shipping over $60', 'Free UK shipping over £50', 'Printed just for you']} />
+  <DropRail drop={drop} products={dropProducts} />
+  <CategoryTiles />
+  <FlatToFabric />
+  <LookbookTeaser />
+  <Section tone="light">
+    <SectionHeader eyebrow="Most worn" title="Best sellers" href="/shop?sort=popular" />
+    <ProductGrid products={bestSellers().slice(0, 4)} />
+  </Section>
+  {reviews.length > 0 && <Section tone="paper">{/* Reviews carousel goes here */}</Section>}
+  <NewsletterBand />
+</StoreLayout>

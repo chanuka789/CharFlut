@@ -1,0 +1,180 @@
+---
+/**
+ * Admin dashboard shell (plan 05): dark theme, yellow highlights, works on a phone.
+ * Desktop: fixed sidebar. Tablet/phone: top bar + bottom tab bar + "More" sheet.
+ * Behind Cloudflare Access; the identity is checked again in middleware.
+ */
+import BaseLayout from './BaseLayout.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { adminMobileTabs, adminNav } from '@/lib/admin-nav';
+
+interface Props {
+  title: string;
+  description?: string;
+  actions?: boolean;
+}
+const { title, description } = Astro.props;
+const staff = Astro.locals.staff ?? { email: 'unknown', role: 'support' as const };
+const items = adminNav.filter((n) => n.roles.includes(staff.role));
+const path = Astro.url.pathname.replace(/\/$/, '') || '/admin';
+const isActive = (href: string) => (href === '/admin' ? path === '/admin' : path.startsWith(href));
+const groups = ['Sell', 'Catalog', 'Grow', 'Store'] as const;
+const tabs = items.filter((i) => adminMobileTabs.includes(i.href));
+---
+
+<BaseLayout title={`${title} · Admin`} noindex theme="dark" motion="calm" transitions={false}>
+  <div class="admin min-h-[100dvh] bg-bg text-ink lg:grid lg:grid-cols-[248px_1fr]">
+    <!-- Sidebar (desktop) -->
+    <aside class="sticky top-0 hidden h-[100dvh] flex-col border-r border-line bg-[#141414] lg:flex">
+      <a href="/admin" class="flex items-center gap-3 px-5 py-5">
+        <img src="/brand/icon.svg" alt="" width="32" height="32" />
+        <span class="font-display text-[0.95rem] font-black uppercase tracking-wide">CharFlut <span class="text-muted">Admin</span></span>
+      </a>
+      <nav aria-label="Admin" class="flex-1 overflow-y-auto px-3 pb-6">
+        {
+          groups.map((g) => {
+            const list = items.filter((i) => i.group === g);
+            if (!list.length) return null;
+            return (
+              <div class="mt-5">
+                <p class="t-label px-3 pb-2 text-muted">{g}</p>
+                <ul class="space-y-0.5">
+                  {list.map((i) => (
+                    <li>
+                      <a href={i.href} aria-current={isActive(i.href) ? 'page' : undefined} class="admin-link">
+                        <Icon name={i.icon} size={18} />
+                        <span class="flex-1">{i.label}</span>
+                        {i.phase > 1 && <span class="rounded-full border border-line px-1.5 text-[10px] font-bold text-muted">P{i.phase}</span>}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })
+        }
+      </nav>
+      <div class="border-t border-line p-4 text-sm">
+        <p class="truncate font-semibold">{staff.email}</p>
+        <p class="capitalize text-muted">{staff.role}</p>
+        <a href="/" class="mt-3 inline-flex items-center gap-2 text-muted hover:text-ink"><Icon name="external" size={16} /> View store</a>
+      </div>
+    </aside>
+
+    <div class="min-w-0 pb-[calc(72px+env(safe-area-inset-bottom))] lg:pb-0">
+      <!-- Top bar -->
+      <header class="sticky top-0 z-30 border-b border-line bg-bg/90 backdrop-blur">
+        <div class="flex h-16 items-center gap-3 px-4 sm:px-6 lg:px-8">
+          <a href="/admin" class="lg:hidden" aria-label="Admin home"><img src="/brand/icon.svg" alt="" width="30" height="30" /></a>
+          <div class="min-w-0 flex-1">
+            <h1 class="truncate font-display text-lg font-black uppercase tracking-wide sm:text-xl">{title}</h1>
+            {description && <p class="hidden truncate text-sm text-muted sm:block">{description}</p>}
+          </div>
+          <form action="/admin/orders" class="relative hidden md:block" role="search">
+            <label for="admin-q" class="sr-only">Search orders</label>
+            <Icon name="search" size={18} class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted" />
+            <input id="admin-q" name="q" placeholder="Order, email…" class="input !min-h-10 !w-64 !py-2 !pl-10 text-sm" />
+          </form>
+          <slot name="actions" />
+        </div>
+      </header>
+      <main id="main" class="px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+        <slot />
+      </main>
+    </div>
+
+    <!-- Bottom tabs (phones and tablets) -->
+    <nav aria-label="Admin quick" class="fixed inset-x-0 bottom-0 z-40 border-t border-line bg-[#141414] pb-[env(safe-area-inset-bottom)] lg:hidden">
+      <ul class="grid grid-cols-5">
+        {
+          tabs.map((t) => (
+            <li>
+              <a href={t.href} aria-current={isActive(t.href) ? 'page' : undefined} class="admin-tab">
+                <Icon name={t.icon} size={22} />
+                <span>{t.label}</span>
+              </a>
+            </li>
+          ))
+        }
+        <li>
+          <button type="button" class="admin-tab w-full" data-admin-more aria-expanded="false" aria-controls="admin-more">
+            <Icon name="menu" size={22} />
+            <span>More</span>
+          </button>
+        </li>
+      </ul>
+    </nav>
+    <div id="admin-more" class="fixed inset-0 z-50 hidden lg:hidden" data-open="false">
+      <div class="absolute inset-0 bg-black/60" data-admin-close></div>
+      <div class="absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto rounded-t-[var(--radius-lg)] border-t border-line bg-[#141414] p-4 pb-[max(16px,env(safe-area-inset-bottom))]">
+        <div class="mb-3 flex items-center justify-between">
+          <p class="font-display font-black uppercase">All modules</p>
+          <button class="icon-btn" data-admin-close aria-label="Close"><Icon name="close" /></button>
+        </div>
+        <ul class="grid grid-cols-3 gap-2 sm:grid-cols-4">
+          {
+            items.map((i) => (
+              <li>
+                <a href={i.href} aria-current={isActive(i.href) ? 'page' : undefined} class="flex flex-col items-center gap-2 rounded-[var(--radius-md)] border border-line p-3 text-center text-xs font-semibold aria-[current=page]:border-brand">
+                  <Icon name={i.icon} size={22} />
+                  {i.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+        <p class="mt-4 truncate text-center text-xs text-muted">{staff.email} · {staff.role}</p>
+      </div>
+    </div>
+  </div>
+</BaseLayout>
+
+<style is:global>
+  .admin-link {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 9px 12px;
+    border-radius: var(--radius-md);
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-muted);
+    transition:
+      background-color var(--duration-fast),
+      color var(--duration-fast);
+  }
+  .admin-link:hover {
+    color: var(--color-ink);
+    background: #1f1f1f;
+  }
+  .admin-link[aria-current='page'] {
+    color: var(--color-ink);
+    background: #242424;
+    box-shadow: inset 3px 0 0 var(--color-brand);
+  }
+  .admin-tab {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 10px 0 8px;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--color-muted);
+  }
+  .admin-tab[aria-current='page'] {
+    color: var(--color-brand);
+  }
+</style>
+
+<script>
+  const sheet = document.getElementById('admin-more');
+  const btn = document.querySelector<HTMLButtonElement>('[data-admin-more]');
+  const set = (open: boolean) => {
+    sheet?.classList.toggle('hidden', !open);
+    btn?.setAttribute('aria-expanded', String(open));
+  };
+  btn?.addEventListener('click', () => set(true));
+  sheet?.querySelectorAll('[data-admin-close]').forEach((el) => el.addEventListener('click', () => set(false)));
+  document.addEventListener('keydown', (e) => e.key === 'Escape' && set(false));
+</script>

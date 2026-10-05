@@ -1,0 +1,16 @@
+---
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Logo from '@/components/ui/Logo.astro';
+Astro.response.status = 503;
+Astro.response.headers.set('Retry-After', '1800');
+---
+
+<BaseLayout title="Back soon" noindex theme="dark" transitions={false}>
+  <main id="main" class="grid min-h-[100svh] place-items-center bg-bg px-[var(--gutter)] text-center text-ink cf-grain">
+    <div>
+      <Logo variant="icon" height={64} class="mx-auto mb-8 h-16 w-16" />
+      <h1 class="t-h1">Back soon.</h1>
+      <p class="t-lead mx-auto mt-4 max-w-md">We are making a few changes. Your cart is saved. Please check back in a little while.</p>
+    </div>
+  </main>
+</BaseLayout>

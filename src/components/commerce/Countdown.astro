@@ -1,0 +1,29 @@
+---
+/** Drop countdown (plan 01, moment 5). Server renders the first value; the motion script ticks it. */
+interface Props {
+  to: string;
+  class?: string;
+}
+const { to, class: className } = Astro.props;
+const left = Math.max(0, new Date(to).getTime() - Date.now());
+const pad = (n: number) => String(n).padStart(2, '0');
+const parts = [
+  { k: 'd', label: 'Days', v: pad(Math.floor(left / 864e5)) },
+  { k: 'h', label: 'Hours', v: pad(Math.floor((left / 36e5) % 24)) },
+  { k: 'm', label: 'Min', v: pad(Math.floor((left / 6e4) % 60)) },
+  { k: 's', label: 'Sec', v: pad(Math.floor((left / 1e3) % 60)) },
+];
+---
+
+<div data-countdown={to} class:list={['flex gap-2 sm:gap-3', className]} role="timer" aria-label={`Launches ${new Date(to).toUTCString()}`}>
+  {
+    parts.map((p) => (
+      <div class="min-w-[64px] rounded-[var(--radius-md)] border border-line px-3 py-3 text-center sm:min-w-[84px]">
+        <span class="block font-display text-[clamp(1.75rem,4vw,3rem)] font-black leading-none tabular-nums" {...{ [`data-${p.k}`]: '' }}>
+          {p.v}
+        </span>
+        <span class="t-label mt-1 block text-muted">{p.label}</span>
+      </div>
+    ))
+  }
+</div>

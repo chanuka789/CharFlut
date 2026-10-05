@@ -1,0 +1,52 @@
+---
+/**
+ * The one button. Variants: primary (yellow, ONE per screen), dark, outline, ghost.
+ * Renders <a> when href is set, otherwise <button>. `magnetic` adds the desktop cursor pull (plan 01, moment 4).
+ */
+import type { HTMLAttributes } from 'astro/types';
+import Icon from './Icon.astro';
+import type { IconName } from './icons';
+
+type Props = {
+  variant?: 'primary' | 'dark' | 'outline' | 'ghost';
+  size?: 'sm' | 'md' | 'lg';
+  href?: string;
+  type?: 'button' | 'submit' | 'reset';
+  block?: boolean;
+  icon?: IconName;
+  arrow?: boolean;
+  magnetic?: boolean;
+  class?: string;
+} & Omit<HTMLAttributes<'button'> & HTMLAttributes<'a'>, 'type'>;
+
+const {
+  variant = 'primary',
+  size = 'md',
+  href,
+  type = 'button',
+  block = false,
+  icon,
+  arrow = false,
+  magnetic = false,
+  class: className,
+  ...rest
+} = Astro.props;
+
+const classes = ['btn', `btn-${variant}`, size !== 'md' && `btn-${size}`, block && 'btn-block', className]
+  .filter(Boolean)
+  .join(' ');
+const Tag = href ? 'a' : 'button';
+---
+
+<Tag
+  class={classes}
+  href={href}
+  type={href ? undefined : type}
+  data-magnetic={magnetic ? '' : undefined}
+  data-cursor={magnetic ? 'hover' : undefined}
+  {...rest}
+>
+  {icon && <Icon name={icon} size={20} />}
+  <span><slot /></span>
+  {arrow && <Icon name="arrow-right" size={20} class="btn-arrow" />}
+</Tag>

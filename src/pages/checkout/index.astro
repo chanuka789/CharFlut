@@ -1,0 +1,21 @@
+---
+import CheckoutLayout from '@/layouts/CheckoutLayout.astro';
+import Checkout from '@/components/checkout/Checkout';
+import { estimate } from '@/lib/delivery';
+
+const country = Astro.locals.country === 'GB' ? 'GB' : 'US';
+const fmt = (c: 'US' | 'GB', m: 'standard' | 'express') => {
+  const e = estimate(c, m);
+  return `${e.from} – ${e.to}`;
+};
+const etas = {
+  US: { standard: fmt('US', 'standard'), express: fmt('US', 'express') },
+  GB: { standard: fmt('GB', 'standard'), express: fmt('GB', 'express') },
+};
+---
+
+<CheckoutLayout title="Checkout">
+  <div class="cf-container max-w-[1200px]">
+    <Checkout client:load initialCountry={country} etas={etas} />
+  </div>
+</CheckoutLayout>

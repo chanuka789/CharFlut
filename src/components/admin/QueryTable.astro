@@ -1,0 +1,48 @@
+---
+/**
+ * Read-only table backed by a D1 query, used by the phase 2–3 admin modules.
+ * Columns can format values server-side. Stacks into cards on phones.
+ */
+import { db } from '@/lib/server/db';
+
+type Col = { key: string; label: string; format?: (v: unknown, row: Record<string, unknown>) => string; class?: string };
+interface Props {
+  sql: string;
+  binds?: unknown[];
+  columns: Col[];
+  empty: string;
+}
+const { sql, binds = [], columns, empty } = Astro.props;
+let rows: Record<string, unknown>[] = [];
+let error = '';
+try {
+  rows = (await db()?.prepare(sql).bind(...binds).all<Record<string, unknown>>())?.results ?? [];
+} catch (e) {
+  error = (e as Error).message.includes('no such table') ? 'Run the D1 migrations first (npm run db:migrate:local).' : 'Could not load data.';
+}
+---
+
+<div class="rounded-[var(--radius-lg)] border border-line bg-surface md:overflow-hidden">
+  {
+    rows.length ? (
+      <table class="table table-stack">
+        <thead>
+          <tr>{columns.map((c) => <th>{c.label}</th>)}</tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr>
+              {columns.map((c) => (
+                <td data-label={c.label} class={c.class}>
+                  {c.format ? c.format(r[c.key], r) : String(r[c.key] ?? '—')}
+                </td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    ) : (
+      <p class="p-8 text-center text-sm text-muted">{error || empty}</p>
+    )
+  }
+</div>

@@ -1,0 +1,32 @@
+---
+/**
+ * Renders the price in both store currencies; CSS shows the visitor's currency (html[data-currency]).
+ * No JavaScript and no flash when the currency switch changes.
+ */
+import { formatMoney } from '@/lib/money';
+import type { Currency } from '@/lib/types';
+
+interface Props {
+  price: Record<Currency, number>;
+  compareAt?: Record<Currency, number>;
+  class?: string;
+}
+const { price, compareAt, class: className } = Astro.props;
+const currencies: Currency[] = ['USD', 'GBP'];
+---
+
+<span class:list={['t-price inline-flex items-baseline gap-2', className]}>
+  {
+    currencies.map((c) => (
+      <span data-cur={c}>
+        {formatMoney(price[c], c)}
+        {compareAt && (
+          <s class="ml-2 font-normal t-muted">
+            <span class="sr-only">was </span>
+            {formatMoney(compareAt[c], c)}
+          </s>
+        )}
+      </span>
+    ))
+  }
+</span>

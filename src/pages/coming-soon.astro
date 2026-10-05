@@ -1,0 +1,29 @@
+---
+/** Pre-launch page with waitlist (plan 04, system pages). Point the root here before launch if needed. */
+import BaseLayout from '@/layouts/BaseLayout.astro';
+import Logo from '@/components/ui/Logo.astro';
+import Countdown from '@/components/commerce/Countdown.astro';
+import WaitlistForm from '@/components/commerce/WaitlistForm.astro';
+import Garment from '@/components/product/Garment';
+import { drops } from '@/data/catalog';
+---
+
+<BaseLayout title="Coming soon" description="CharFlut launches soon. Join the waitlist for first access and 10% off." theme="dark">
+  <main id="main" data-hero class="relative grid min-h-[100svh] overflow-hidden bg-bg text-ink cf-grain">
+    <div aria-hidden="true" class="absolute right-[-10%] top-1/2 size-[min(110vw,900px)] -translate-y-1/2 rounded-full opacity-25 blur-3xl" style="background: radial-gradient(circle, #FFC800 0%, transparent 60%)"></div>
+    <div class="absolute bottom-0 right-[-8%] top-[30%] w-[80%] opacity-90 md:top-[8%] md:w-[52%]" data-parallax="0.1">
+      <Garment category="hoodies" color="#141414" ink="#FFC800" design="stack" view="back" className="h-full w-full" />
+    </div>
+    <div class="cf-container relative flex flex-col justify-between py-8">
+      <Logo variant="reversed" height={28} class="h-7 w-auto" />
+      <div class="max-w-2xl py-16">
+        <p class="t-label mb-5 text-muted">Drop 01 · {drops[0].title}</p>
+        <h1 class="t-display" data-split>Clean cuts. Bold prints.</h1>
+        <p class="t-lead mt-6 max-w-md !text-white/75">CharFlut launches soon. Join the waitlist for first access and 10% off your first order.</p>
+        <Countdown to={drops[0].launchAt} class="mt-8" />
+        <WaitlistForm source="coming-soon" cta="Get first access" class="mt-6 max-w-lg" />
+      </div>
+      <p class="t-small t-muted">© CharFlut · US and UK</p>
+    </div>
+  </main>
+</BaseLayout>

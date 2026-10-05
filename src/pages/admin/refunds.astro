@@ -1,0 +1,19 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import QueryTable from '@/components/admin/QueryTable.astro';
+import { formatMoney } from '@/lib/money';
+---
+
+<AdminLayout title="Refunds and returns" description="Requests, reasons, photos and reprints (phase 2)">
+  <QueryTable
+    sql="SELECT r.created_at, o.number, r.reason, r.status, r.amount, o.currency FROM refunds r JOIN orders o ON o.id = r.order_id ORDER BY r.created_at DESC"
+    empty="No refund requests. For faulty items, ask the provider for a reprint (Printify support-requests API, Printful dashboard)."
+    columns={[
+      { key: 'created_at', label: 'Date', class: 'text-muted' },
+      { key: 'number', label: 'Order', class: 'font-semibold' },
+      { key: 'reason', label: 'Reason' },
+      { key: 'status', label: 'Status', class: 'capitalize' },
+      { key: 'amount', label: 'Amount', format: (v, r) => formatMoney(Number(v), r.currency as 'USD' | 'GBP') },
+    ]}
+  />
+</AdminLayout>

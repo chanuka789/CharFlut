@@ -1,0 +1,36 @@
+---
+/** Guest order tracking (plan 04): order number + email. Looks the order up in D1 on POST. */
+import StoreLayout from '@/layouts/StoreLayout.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import Field from '@/components/ui/Field.astro';
+import Button from '@/components/ui/Button.astro';
+import OrderTimeline from '@/components/commerce/OrderTimeline.astro';
+import { findOrderForGuest, type OrderView } from '@/lib/server/orders';
+
+let order: OrderView | null = null;
+let error = '';
+let values = { number: '', email: '' };
+if (Astro.request.method === 'POST') {
+  const fd = await Astro.request.formData();
+  values = { number: String(fd.get('number') ?? '').trim(), email: String(fd.get('email') ?? '').trim() };
+  order = await findOrderForGuest(values.number, values.email);
+  if (!order) error = 'We could not find an order with that number and email. Check both and try again.';
+}
+---
+
+<StoreLayout title="Track your order" description="Track a CharFlut order with your order number and email." noindex>
+  <PageHeader title="Track your order" lead="Enter the order number from your confirmation email and the email you used at checkout." crumbs={[{ label: 'Home', href: '/' }, { label: 'Track order' }]} />
+  <section class="bg-bg pb-[var(--section-y)]">
+    <div class="cf-container grid gap-10 lg:grid-cols-12">
+      <form method="post" class="panel grid gap-5 lg:col-span-5" novalidate>
+        <Field label="Order number" name="number" required placeholder="CF-10234" value={values.number} autocomplete="off" />
+        <Field label="Email" name="email" type="email" required autocomplete="email" value={values.email} error={error || undefined} />
+        <Button type="submit" variant="dark" block arrow>Track order</Button>
+        <p class="t-small t-muted">Have an account? <a class="underline" href="/account/orders">See all your orders</a>.</p>
+      </form>
+      <div class="lg:col-span-7">
+        {order ? <OrderTimeline order={order} /> : <p class="t-muted">Your order status and tracking links will show here.</p>}
+      </div>
+    </div>
+  </section>
+</StoreLayout>

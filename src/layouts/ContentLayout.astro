@@ -1,0 +1,66 @@
+---
+/** Help and legal pages: title band, optional side navigation, readable prose column. */
+import StoreLayout from './StoreLayout.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import type { SeoProps } from './BaseLayout.astro';
+
+interface Props extends SeoProps {
+  heading: string;
+  eyebrow?: string;
+  lead?: string;
+  updated?: string;
+  section: 'help' | 'legal';
+}
+const { heading, eyebrow, lead, updated, section, ...seo } = Astro.props;
+const nav =
+  section === 'help'
+    ? [
+        { label: 'Size guide', href: '/help/size-guide' },
+        { label: 'Shipping', href: '/help/shipping' },
+        { label: 'Returns and refunds', href: '/help/returns' },
+        { label: 'FAQ', href: '/help/faq' },
+        { label: 'Track order', href: '/track-order' },
+        { label: 'Contact', href: '/contact' },
+      ]
+    : [
+        { label: 'Privacy policy', href: '/legal/privacy' },
+        { label: 'Terms of service', href: '/legal/terms' },
+        { label: 'Cookie policy', href: '/legal/cookies' },
+        { label: 'Accessibility', href: '/legal/accessibility' },
+      ];
+const path = Astro.url.pathname;
+---
+
+<StoreLayout {...seo}>
+  <PageHeader
+    title={heading}
+    eyebrow={eyebrow ?? (section === 'help' ? 'Help' : 'Legal')}
+    lead={lead}
+    crumbs={[{ label: 'Home', href: '/' }, { label: section === 'help' ? 'Help' : 'Legal', href: nav[0].href }, { label: heading }]}
+  />
+  <section class="bg-bg pb-[var(--section-y)]">
+    <div class="cf-container grid gap-10 lg:grid-cols-12">
+      <nav aria-label={section === 'help' ? 'Help pages' : 'Legal pages'} class="lg:col-span-3">
+        <ul class="no-scrollbar -mx-[var(--gutter)] flex gap-2 overflow-x-auto px-[var(--gutter)] lg:sticky lg:top-[calc(var(--header-h)+var(--bar-h)+24px)] lg:mx-0 lg:flex-col lg:gap-1 lg:px-0">
+          {
+            nav.map((n) => (
+              <li class="shrink-0">
+                <a
+                  href={n.href}
+                  aria-current={path === n.href ? 'page' : undefined}
+                  class="block rounded-[var(--radius-md)] border border-line px-4 py-2.5 text-sm font-semibold transition-colors hover:border-ink aria-[current=page]:border-ink aria-[current=page]:bg-ink aria-[current=page]:text-bg lg:border-transparent"
+                >
+                  {n.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+      <article class="cf-prose lg:col-span-8 lg:col-start-5">
+        {updated && <p class="t-small t-muted !mb-8">Last updated {updated}</p>}
+        <slot />
+      </article>
+    </div>
+  </section>
+</StoreLayout>

@@ -1,0 +1,45 @@
+---
+/**
+ * Editorial frame used for lookbook images. Until the real model photography arrives (plan 10, samples),
+ * it renders an art-directed composition: tone background, oversized type, garment. Pass `src` to show a photo.
+ */
+import Garment from '@/components/product/Garment';
+import type { CategorySlug, PrintDesign } from '@/lib/types';
+
+interface Props {
+  src?: string;
+  alt?: string;
+  tone: string;
+  word: string;
+  category: CategorySlug;
+  color: string;
+  ink: string;
+  design: PrintDesign;
+  view?: 'front' | 'back';
+  class?: string;
+  parallax?: number;
+}
+const { src, alt = '', tone, word, category, color, ink, design, view = 'front', class: className, parallax = 0.12 } = Astro.props;
+const darkTone = ['#111111', '#141414', '#1C2433', '#2F3B2F'].includes(tone);
+---
+
+<figure class:list={['relative overflow-hidden rounded-[var(--radius-lg)]', className]} style={`background:${tone}`}>
+  {
+    src ? (
+      <img src={src} alt={alt} loading="lazy" class="h-full w-full object-cover" data-zoom />
+    ) : (
+      <div class="absolute inset-0" aria-hidden="true">
+        <p
+          class:list={['t-display absolute inset-x-0 top-[6%] text-center text-[clamp(4rem,14vw,12rem)] leading-none', darkTone ? 'text-white/10' : 'text-black/[0.07]']}
+          data-parallax={String(-parallax)}
+        >
+          {word}
+        </p>
+        <div class="absolute inset-[12%] bottom-[6%]" data-parallax={String(parallax)}>
+          <Garment category={category} color={color} ink={ink} design={design} view={view} className="h-full w-full drop-shadow-[0_40px_50px_rgba(0,0,0,0.35)]" />
+        </div>
+      </div>
+    )
+  }
+  <slot />
+</figure>

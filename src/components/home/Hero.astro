@@ -1,0 +1,95 @@
+---
+/**
+ * Home hero (plan 04 #1): dark full-screen stage, 3D tee with the print pass, headline, two buttons.
+ * The section is taller than the screen so scrolling drives the print; the stage is sticky.
+ * The SVG garment is the still poster (fast LCP); the WebGL scene fades in over it when ready.
+ */
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+import Garment from '@/components/product/Garment';
+import HeroScene from '@/three/HeroScene';
+
+interface Props {
+  dropHref: string;
+}
+const { dropHref } = Astro.props;
+---
+
+<section id="hero" data-hero data-theme="dark" class="hero relative bg-bg text-ink" aria-label="Clean cuts. Bold prints.">
+  <div class="sticky top-0 h-[100svh] overflow-hidden cf-grain">
+    <!-- Soft yellow light behind the garment -->
+    <div
+      aria-hidden="true"
+      class="pointer-events-none absolute left-1/2 top-[46%] size-[min(120vw,1100px)] -translate-x-1/2 -translate-y-1/2 rounded-full opacity-25 blur-3xl"
+      style="background: radial-gradient(circle, #FFC800 0%, transparent 60%)"
+      data-parallax="0.15"
+    >
+    </div>
+
+    <!-- Giant outline word, slow parallax layer -->
+    <p
+      aria-hidden="true"
+      class="t-display t-outline pointer-events-none absolute inset-x-0 top-[18%] select-none text-center text-[22vw] leading-none text-white/10"
+      data-parallax="-0.3"
+    >
+      FLAT→FABRIC
+    </p>
+
+    <!-- 3D stage: poster first, canvas over it -->
+    <div data-stage class="absolute inset-x-0 top-[calc(var(--header-h)+var(--bar-h))] bottom-[48%] sm:bottom-[40%] lg:bottom-0 lg:left-[38%] lg:top-0">
+      <div data-poster class="absolute inset-0 grid place-items-center p-[6%] transition-opacity duration-700 lg:p-[12%]">
+        <Garment category="tees" color="#F4F4F1" ink="#111111" design="monogram" view="front" className="h-full w-auto max-w-full drop-shadow-[0_40px_60px_rgba(0,0,0,0.6)]" title="CharFlut monogram tee" />
+      </div>
+      <HeroScene client:only="react" trackSelector="#hero" />
+    </div>
+
+    <!-- Copy -->
+    <div class="cf-container relative flex h-full flex-col justify-end pb-[max(28px,env(safe-area-inset-bottom))] pt-[calc(var(--header-h)+var(--bar-h)+24px)] lg:justify-center lg:pb-0">
+      <div class="max-w-[22ch] lg:max-w-[52%]">
+        <p class="t-label mb-5 flex items-center gap-3 text-muted" data-reveal>
+          <span class="inline-block size-2 rounded-full bg-brand"></span> Drop 01 · First Light
+        </p>
+        <h1 class="t-display text-[min(clamp(3rem,12vw,9rem),13svh)]" data-split>Clean cuts. Bold prints.</h1>
+        <p class="t-lead mt-4 max-w-md !text-white/75 sm:mt-5" data-reveal>
+          Heavyweight tees and hoodies, printed on demand for the US and UK.
+        </p>
+        <div class="mt-6 flex flex-wrap gap-3 sm:mt-7" data-reveal>
+          <Button href="/shop" size="lg" arrow magnetic>Shop now</Button>
+          <Button href={dropHref} size="lg" variant="outline" magnetic>View drop</Button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Scroll cue and print progress -->
+    <div class="absolute bottom-6 right-[var(--gutter)] hidden items-center gap-3 text-sm text-white/70 lg:flex" aria-hidden="true">
+      <span class="scroll-cue grid size-11 place-items-center rounded-full border border-white/25">
+        <Icon name="chevron-down" size={18} />
+      </span>
+      Scroll to print
+    </div>
+  </div>
+</section>
+
+<style>
+  .hero {
+    height: 175svh;
+  }
+  @media (max-width: 767px) {
+    .hero {
+      height: 150svh;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .hero {
+      height: 100svh;
+    }
+  }
+  .scroll-cue {
+    animation: cue 2.2s var(--ease-in-out) infinite;
+  }
+  @keyframes cue {
+    50% {
+      transform: translateY(6px);
+    }
+  }
+</style>

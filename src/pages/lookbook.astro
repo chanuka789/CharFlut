@@ -1,0 +1,63 @@
+---
+/** Lookbook (plan 04): full-screen editorial images with parallax and product tags you can tap to shop. */
+import StoreLayout from '@/layouts/StoreLayout.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import Editorial from '@/components/home/Editorial.astro';
+import Price from '@/components/ui/Price.astro';
+import { getProduct } from '@/data/catalog';
+
+const looks = [
+  { slug: 'sunburst-heavy-hoodie', tone: '#D9CBB0', word: 'FIRST', view: 'back' as const, tag: { x: 52, y: 46 }, layout: 'full' },
+  { slug: 'cf-monogram-heavy-tee', tone: '#111111', word: 'MARK', view: 'front' as const, tag: { x: 50, y: 40 }, layout: 'left' },
+  { slug: 'statement-heavy-tee', tone: '#FFC800', word: 'OWN', view: 'back' as const, tag: { x: 48, y: 52 }, layout: 'right' },
+  { slug: 'stacked-logo-hoodie', tone: '#2F3B2F', word: 'STACK', view: 'back' as const, tag: { x: 50, y: 50 }, layout: 'full' },
+  { slug: 'orbit-regular-hoodie', tone: '#1C2433', word: 'ORBIT', view: 'front' as const, tag: { x: 50, y: 42 }, layout: 'left' },
+  { slug: 'wordmark-boxy-tee', tone: '#F4F4F1', word: 'LOUD', view: 'front' as const, tag: { x: 50, y: 38 }, layout: 'right' },
+].map((l) => ({ ...l, p: getProduct(l.slug)! }));
+---
+
+<StoreLayout title="Lookbook" description="The CharFlut lookbook. Autumn 26, styled and shot in the studio.">
+  <PageHeader title="Lookbook" eyebrow="Autumn 26" lead="Styled in the studio. Tap a tag to shop the piece." crumbs={[{ label: 'Home', href: '/' }, { label: 'Lookbook' }]} outlineWord="LOOK" />
+  <section class="bg-bg pb-[var(--section-y)]">
+    <div class="cf-container grid grid-cols-1 gap-3 sm:gap-5 md:grid-cols-12">
+      {
+        looks.map((l, i) => {
+          const col = l.layout === 'full' ? 'md:col-span-12' : l.layout === 'left' ? 'md:col-span-7' : 'md:col-span-5 md:mt-[30%]';
+          const color = l.p.colors.find((c) => c.hex.toLowerCase() === l.tone.toLowerCase()) ?? l.p.colors[0];
+          return (
+            <div class:list={[col]} data-reveal>
+              <Editorial
+                class={l.layout === 'full' ? 'aspect-[4/5] md:aspect-[16/9]' : 'aspect-[4/5]'}
+                tone={l.tone}
+                word={l.word}
+                category={l.p.category}
+                color={color.hex === l.tone ? l.p.colors[1]?.hex ?? color.hex : color.hex}
+                ink={color.ink}
+                design={l.p.design}
+                view={l.view}
+                parallax={0.1 + (i % 3) * 0.06}
+              >
+                <a
+                  href={`/shop/${l.p.category}/${l.p.slug}`}
+                  class="look-tag group absolute z-10 flex items-center gap-3"
+                  style={`left:${l.tag.x}%;top:${l.tag.y}%`}
+                  aria-label={`Shop ${l.p.title}`}
+                >
+                  <span class="relative grid size-9 place-items-center rounded-full bg-white text-black shadow-lg">
+                    <span class="absolute inset-0 animate-ping rounded-full bg-white/60" />
+                    <span class="relative text-lg font-bold">+</span>
+                  </span>
+                  <span class="hidden rounded-[var(--radius-md)] bg-white px-4 py-2.5 text-black shadow-lg sm:block sm:-translate-x-2 sm:opacity-0 sm:transition sm:duration-300 sm:group-hover:translate-x-0 sm:group-hover:opacity-100 sm:group-focus-visible:opacity-100">
+                    <span class="block text-sm font-bold">{l.p.title}</span>
+                    <Price price={l.p.price} class="text-sm" />
+                  </span>
+                </a>
+              </Editorial>
+            </div>
+          );
+        })
+      }
+    </div>
+    <p class="cf-container t-small t-muted mt-8">Placeholder art direction. Replace with studio photography from the sample shoot (plan 10).</p>
+  </section>
+</StoreLayout>

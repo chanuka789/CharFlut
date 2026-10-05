@@ -1,0 +1,27 @@
+---
+/** Accessible accordion built on <details>. Works without JavaScript. */
+import Icon from './Icon.astro';
+
+interface Props {
+  items: { title: string; body: string }[];
+  class?: string;
+  openFirst?: boolean;
+}
+const { items, class: className, openFirst = false } = Astro.props;
+---
+
+<div class:list={['border-t border-line', className]}>
+  {
+    items.map((it, i) => (
+      <details class="group border-b border-line" open={openFirst && i === 0}>
+        <summary class="flex cursor-pointer list-none items-center justify-between gap-6 py-5 text-left font-display text-[1.0625rem] font-extrabold [&::-webkit-details-marker]:hidden">
+          {it.title}
+          <span class="grid size-9 shrink-0 place-items-center rounded-full border border-line transition-transform duration-300 group-open:rotate-45">
+            <Icon name="plus" size={18} />
+          </span>
+        </summary>
+        <div class="cf-prose pb-6 t-muted" set:html={it.body} />
+      </details>
+    ))
+  }
+</div>

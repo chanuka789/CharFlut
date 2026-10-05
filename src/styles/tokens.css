@@ -1,0 +1,53 @@
+/* CharFlut design tokens. Generated from design/tokens/tokens.json. Edit the JSON, then regenerate. */
+:root {
+  --color-brand: #ffc800;
+  --color-on-brand: #111111;
+  --color-ink: #111111;
+  --color-bg: #ffffff;
+  --color-surface: #f4f4f1;
+  --color-slab: #111111;
+  --color-stone: #8c8c8c;
+  --color-muted: #595959;
+  --color-line: #d9d9d6;
+  --color-danger: #c62828;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 18px;
+  --radius-pill: 999px;
+  --font-display: 'Archivo', 'Arial Black', Arial, sans-serif;
+  --font-body: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --ease-out: cubic-bezier(0.215, 0.61, 0.355, 1); /* GSAP power3.out */
+  --ease-in-out: cubic-bezier(0.455, 0.03, 0.515, 0.955); /* GSAP power2.inOut */
+  --duration-fast: 150ms;
+  --duration-base: 300ms;
+  --duration-slow: 700ms;
+  --duration-hero: 1200ms;
+}
+
+/* Dark sections (hero, drops) and the admin dashboard */
+[data-theme="dark"] {
+  --color-ink: #ffffff;
+  --color-bg: #111111;
+  --color-surface: #1c1c1c;
+  --color-slab: #3a3a3a;
+  --color-muted: #b3b3b3;
+  --color-line: #333333;
+  --color-danger: #ff6b6b;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-base: 0ms;
+    --duration-slow: 0ms;
+    --duration-hero: 0ms;
+  }
+}

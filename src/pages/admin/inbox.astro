@@ -1,0 +1,19 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import QueryTable from '@/components/admin/QueryTable.astro';
+---
+
+<AdminLayout title="Support inbox" description="Contact form tickets; reply by email (phase 3)">
+  <QueryTable
+    sql="SELECT created_at, email, topic, order_number, message, status FROM tickets ORDER BY created_at DESC LIMIT 200"
+    empty="Inbox zero."
+    columns={[
+      { key: 'created_at', label: 'Date', class: 'text-muted whitespace-nowrap' },
+      { key: 'email', label: 'From' },
+      { key: 'topic', label: 'Topic', class: 'capitalize' },
+      { key: 'order_number', label: 'Order' },
+      { key: 'message', label: 'Message', format: (v) => String(v ?? '').slice(0, 140), class: 'max-w-md' },
+      { key: 'status', label: 'Status', class: 'capitalize' },
+    ]}
+  />
+</AdminLayout>

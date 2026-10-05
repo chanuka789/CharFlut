@@ -1,0 +1,107 @@
+---
+/**
+ * Product card used in every grid and rail. Front image, back image on hover (plan 04, Shop),
+ * light tilt on desktop (data-tilt), colour dots, "New" tag, wishlist toggle.
+ */
+import Garment from '@/components/product/Garment';
+import Price from '@/components/ui/Price.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { Product } from '@/lib/types';
+
+interface Props {
+  product: Product;
+  priority?: boolean;
+  size?: 'default' | 'large';
+  index?: number;
+}
+const { product: p, size = 'default', index = 0 } = Astro.props;
+const href = `/shop/${p.category}/${p.slug}`;
+const c = p.colors[0];
+---
+
+<article
+  class="product-card group relative"
+  data-reveal
+  data-product-card
+  data-filter-category={p.category}
+  data-filter-fit={p.fit}
+  data-filter-colors={p.colors.map((x) => x.id).join(' ')}
+  data-filter-sizes={p.sizes.join(' ')}
+  data-price-usd={p.price.USD}
+  data-price-gbp={p.price.GBP}
+  data-popularity={p.popularity}
+  data-created={p.createdAt}
+  data-title={p.title.toLowerCase()}
+  style={`--i:${index}`}
+>
+  <a href={href} class="block" data-cursor="view" aria-label={p.title}>
+    <div
+      class:list={[
+        'card-media relative overflow-hidden rounded-[var(--radius-md)] bg-surface',
+        size === 'large' ? 'aspect-[4/5]' : 'aspect-[4/5]',
+      ]}
+      data-tilt
+    >
+      <div class="card-face absolute inset-[9%] transition-[opacity,transform] duration-500 ease-[var(--ease-out)]">
+        <Garment category={p.category} color={c.hex} ink={c.ink} design={p.design} view="front" className="h-full w-full" />
+      </div>
+      <div class="card-back absolute inset-[9%] opacity-0 transition-[opacity,transform] duration-500 ease-[var(--ease-out)]">
+        <Garment category={p.category} color={c.hex} ink={c.ink} design={p.design} view="back" className="h-full w-full" />
+      </div>
+      <div class="absolute left-3 top-3 flex gap-2">
+        {p.isNew && <span class="badge badge-dark">New</span>}
+        {p.fit === 'oversized' && <span class="badge hidden sm:inline-flex">Oversized</span>}
+      </div>
+      <span
+        class="card-cta absolute inset-x-3 bottom-3 hidden translate-y-3 items-center justify-between rounded-[var(--radius-md)] bg-bg/95 px-4 py-3 text-sm font-semibold opacity-0 backdrop-blur transition duration-300 md:flex"
+      >
+        Choose size <Icon name="arrow-right" size={18} />
+      </span>
+    </div>
+  </a>
+  <button
+    type="button"
+    class="icon-btn absolute right-2 top-2 bg-bg/80 backdrop-blur"
+    data-wish={p.slug}
+    aria-pressed="false"
+    aria-label={`Save ${p.title} to wishlist`}
+  >
+    <Icon name="heart" size={20} class="wish-off" />
+    <Icon name="heart-fill" size={20} class="wish-on hidden" />
+  </button>
+  <div class="mt-3 flex flex-col gap-0.5 sm:flex-row sm:items-start sm:justify-between sm:gap-3">
+    <div class="min-w-0">
+      <h3 class="line-clamp-2 font-display text-[0.9rem] font-extrabold uppercase leading-tight tracking-tight sm:truncate sm:text-base">
+        <a href={href}>{p.title}</a>
+      </h3>
+      <p class="t-small t-muted mt-0.5 hidden truncate sm:block">{p.tagline}</p>
+    </div>
+    <Price price={p.price} compareAt={p.compareAt} class="shrink-0 text-[0.9rem] sm:text-[0.95rem]" />
+  </div>
+  <ul class="mt-2 flex gap-1.5" aria-label={`${p.colors.length} colours`}>
+    {p.colors.map((col) => <li class="swatch swatch-sm" style={`--swatch:${col.hex}`} title={col.name} />)}
+  </ul>
+</article>
+
+<style>
+  @media (hover: hover) {
+    .product-card:hover .card-back {
+      opacity: 1;
+      transform: scale(1.02);
+    }
+    .product-card:hover .card-face {
+      opacity: 0;
+      transform: scale(0.98);
+    }
+    .product-card:hover .card-cta {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  [data-wish][aria-pressed='true'] .wish-on {
+    display: block;
+  }
+  [data-wish][aria-pressed='true'] .wish-off {
+    display: none;
+  }
+</style>

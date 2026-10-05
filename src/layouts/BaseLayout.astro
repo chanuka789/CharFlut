@@ -1,0 +1,103 @@
+---
+/**
+ * Root document for every page: SEO head, fonts, view transitions, CF wipe, cursor, motion script.
+ * StoreLayout, CheckoutLayout and AdminLayout all build on this.
+ */
+import { ClientRouter } from 'astro:transitions';
+import '@/styles/global.css';
+
+export interface SeoProps {
+  title: string;
+  description?: string;
+  image?: string;
+  noindex?: boolean;
+  canonical?: string;
+  jsonLd?: Record<string, unknown> | Record<string, unknown>[];
+}
+interface Props extends SeoProps {
+  theme?: 'light' | 'dark';
+  motion?: 'full' | 'calm';
+  transitions?: boolean;
+  bodyClass?: string;
+}
+
+const {
+  title,
+  description = 'CharFlut: heavyweight tees and hoodies with clean cuts and bold prints. Printed on demand for the US and UK.',
+  image = '/brand/logo-stacked.svg', // TODO: replace with a 1200x630 PNG at /og/default.png before launch
+  noindex = false,
+  canonical,
+  jsonLd,
+  theme = 'light',
+  motion = 'full',
+  transitions = true,
+  bodyClass,
+} = Astro.props;
+
+const site = Astro.site?.toString().replace(/\/$/, '') ?? '';
+const fullTitle = title === 'CharFlut' ? 'CharFlut · Clean cuts. Bold prints.' : `${title} · CharFlut`;
+const canonicalUrl = canonical ?? site + Astro.url.pathname;
+const currency = Astro.locals.currency ?? 'USD';
+const orgLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'CharFlut',
+  url: site,
+  logo: `${site}/brand/logo-stacked.svg`,
+};
+---
+
+<!doctype html>
+<html lang="en" data-currency={currency} data-theme={theme === 'dark' ? 'dark' : undefined}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <link rel="canonical" href={canonicalUrl} />
+    {noindex && <meta name="robots" content="noindex, nofollow" />}
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <meta name="theme-color" content="#111111" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="CharFlut" />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonicalUrl} />
+    <meta property="og:image" content={site + image} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd ? [orgLd, jsonLd].flat() : orgLd)} />
+    {transitions && <ClientRouter fallback="swap" />}
+    <script is:inline>
+      // Turn on motion classes before first paint so reveals do not flash.
+      if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        document.documentElement.classList.add('js-motion');
+        // Safety net: if the motion script never starts, show everything instead of leaving it hidden.
+        setTimeout(function () {
+          if (!document.documentElement.dataset.motionReady) document.documentElement.classList.remove('js-motion');
+        }, 4000);
+      }
+    </script>
+    <slot name="head" />
+  </head>
+  <body data-motion={motion} class={bodyClass}>
+    <a href="#main" class="skip-link">Skip to content</a>
+    <slot />
+
+    <div id="cf-wipe" aria-hidden="true" transition:persist="cf-wipe">
+      <img class="wipe-mark" src="/brand/icon.svg" alt="" width="88" height="88" />
+    </div>
+    <div id="cf-cursor" aria-hidden="true" transition:persist="cf-cursor"><span class="cursor-label"></span></div>
+
+    <script>
+      import '@/scripts/motion';
+    </script>
+    <style is:global>
+      #cf-cursor[data-state='view'] .cursor-label::after {
+        content: 'View';
+      }
+      #cf-cursor[data-state='drag'] .cursor-label::after {
+        content: 'Drag';
+      }
+    </style>
+  </body>
+</html>

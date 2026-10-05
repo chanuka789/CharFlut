@@ -1,0 +1,43 @@
+---
+/** Breadcrumbs with schema.org BreadcrumbList (plan 09, SEO). */
+import Icon from './Icon.astro';
+
+interface Props {
+  items: { label: string; href?: string }[];
+  class?: string;
+}
+const { items, class: className } = Astro.props;
+const site = Astro.site?.toString().replace(/\/$/, '') ?? '';
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: items.map((it, i) => ({
+    '@type': 'ListItem',
+    position: i + 1,
+    name: it.label,
+    ...(it.href ? { item: site + it.href } : {}),
+  })),
+};
+---
+
+<nav aria-label="Breadcrumb" class:list={['t-small t-muted', className]}>
+  <ol class="flex flex-wrap items-center gap-1.5">
+    {
+      items.map((it, i) => (
+        <li class="flex items-center gap-1.5">
+          {it.href && i < items.length - 1 ? (
+            <a href={it.href} class="cf-link hover:text-ink">
+              {it.label}
+            </a>
+          ) : (
+            <span aria-current="page" class="text-ink">
+              {it.label}
+            </span>
+          )}
+          {i < items.length - 1 && <Icon name="chevron-right" size={14} />}
+        </li>
+      ))
+    }
+  </ol>
+</nav>
+<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />

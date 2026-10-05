@@ -1,0 +1,119 @@
+---
+import StoreLayout from '@/layouts/StoreLayout.astro';
+import Breadcrumbs from '@/components/ui/Breadcrumbs.astro';
+import Accordion from '@/components/ui/Accordion.astro';
+import Icon from '@/components/ui/Icon.astro';
+import Section from '@/components/ui/Section.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+import ProductGrid from '@/components/commerce/ProductGrid.astro';
+import ProductMedia from '@/components/product/ProductMedia.astro';
+import BuyBox from '@/components/product/BuyBox';
+import RecentlyViewed from '@/components/product/RecentlyViewed';
+import { categories, getProduct, related } from '@/data/catalog';
+import { estimate } from '@/lib/delivery';
+
+const { category, slug } = Astro.params;
+const p = getProduct(slug!);
+if (!p || p.category !== category || p.status !== 'active') return Astro.rewrite('/404');
+
+const eta = estimate(Astro.locals.country ?? 'US');
+const site = Astro.site?.toString().replace(/\/$/, '') ?? '';
+const jsonLd = {
+  '@context': 'https://schema.org',
+  '@type': 'Product',
+  name: p.title,
+  description: p.description,
+  sku: p.id,
+  brand: { '@type': 'Brand', name: 'CharFlut' },
+  image: `${site}/brand/logo-stacked.svg`, // TODO: product mockup URL from R2 once the sync stores images
+  offers: (['USD', 'GBP'] as const).map((cur) => ({
+    '@type': 'Offer',
+    priceCurrency: cur,
+    price: (p.price[cur] / 100).toFixed(2),
+    availability: 'https://schema.org/InStock',
+    url: `${site}/shop/${p.category}/${p.slug}`,
+  })),
+};
+const details = [
+  { title: 'Fabric and fit', body: `<p>${p.fabric}.</p><ul>${p.details.map((d) => `<li>${d}</li>`).join('')}</ul>` },
+  { title: 'Care', body: `<ul>${p.care.map((d) => `<li>${d}</li>`).join('')}</ul>` },
+  {
+    title: 'Printed just for you',
+    body: '<p>Made to order: your piece is printed after you buy it, which means less waste. Production takes 2–5 working days, then it ships with tracking.</p>',
+  },
+  {
+    title: 'Shipping and returns',
+    body: '<p>Free US shipping over $60 and free UK shipping over £50. If your item arrives faulty or misprinted, we replace it free. <a href="/help/returns">Read the returns policy</a>.</p>',
+  },
+  {
+    title: 'Product safety',
+    body: '<p>Care label and safety information are printed inside the garment. Manufacturer and EU/UK GPSR details are available on request.</p>',
+  },
+];
+---
+
+<StoreLayout title={p.title} description={`${p.tagline} ${p.description}`.slice(0, 158)} jsonLd={jsonLd}>
+  <section class="bg-bg pt-[calc(var(--header-h)+var(--bar-h)+20px)]">
+    <div class="cf-container">
+      <Breadcrumbs
+        class="mb-5"
+        items={[
+          { label: 'Home', href: '/' },
+          { label: 'Shop', href: '/shop' },
+          { label: categories[p.category].title, href: `/shop/${p.category}` },
+          { label: p.title },
+        ]}
+      />
+      <div class="grid gap-8 lg:grid-cols-12 lg:gap-12">
+        <div class="min-w-0 lg:col-span-7">
+          <ProductMedia product={p} />
+        </div>
+        <div class="min-w-0 lg:col-span-5">
+          <div class="lg:sticky lg:top-[calc(var(--header-h)+var(--bar-h)+24px)]">
+            <BuyBox
+              client:load
+              product={{
+                id: p.id,
+                slug: p.slug,
+                title: p.title,
+                category: p.category,
+                design: p.design,
+                colors: p.colors,
+                sizes: p.sizes,
+                price: p.price,
+                compareAt: p.compareAt,
+                fit: p.fit,
+              }}
+            />
+
+            <div class="panel mt-8 grid gap-4 !p-5 text-sm">
+              <p class="flex gap-3">
+                <Icon name="truck" class="shrink-0" />
+                <span>
+                  <strong>Arrives {eta.from} – {eta.to}</strong> to {eta.region} with standard shipping.
+                </span>
+              </p>
+              <p class="flex gap-3">
+                <Icon name="sparkle" class="shrink-0" />
+                <span>Printed just for you. Ships in 2–5 working days.</span>
+              </p>
+              <p class="flex gap-3">
+                <Icon name="return" class="shrink-0" />
+                <span>Free replacement if it arrives faulty or misprinted.</span>
+              </p>
+            </div>
+
+            <p class="t-lead mt-8">{p.description}</p>
+            <Accordion class="mt-8" items={details} />
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Section tone="light">
+    <SectionHeader eyebrow="Complete the look" title="Wear it with" href="/shop" linkLabel="Shop all" />
+    <ProductGrid products={related(p)} />
+  </Section>
+  <RecentlyViewed client:visible current={p.slug} />
+</StoreLayout>

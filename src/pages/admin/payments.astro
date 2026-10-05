@@ -1,0 +1,23 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import QueryTable from '@/components/admin/QueryTable.astro';
+import Notice from '@/components/admin/Notice.astro';
+import { formatMoney } from '@/lib/money';
+---
+
+<AdminLayout title="Payments" description="WebXPay transactions matched to orders (phase 2)">
+  <Notice>Refunds are made in the WebXPay merchant portal, then recorded on the order. PayPal appears here automatically once it is enabled.</Notice>
+  <QueryTable
+    sql="SELECT p.created_at, o.number, p.method, p.reference, p.status_code, p.status, p.amount, p.currency FROM payments p JOIN orders o ON o.id = p.order_id ORDER BY p.created_at DESC LIMIT 200"
+    empty="No payments yet."
+    columns={[
+      { key: 'created_at', label: 'Date', class: 'text-muted whitespace-nowrap' },
+      { key: 'number', label: 'Order', class: 'font-semibold' },
+      { key: 'method', label: 'Method', class: 'capitalize' },
+      { key: 'reference', label: 'Reference', class: 'font-mono text-xs' },
+      { key: 'status_code', label: 'Code' },
+      { key: 'status', label: 'Status', class: 'capitalize' },
+      { key: 'amount', label: 'Amount', format: (v, r) => formatMoney(Number(v), r.currency as 'USD' | 'GBP') },
+    ]}
+  />
+</AdminLayout>

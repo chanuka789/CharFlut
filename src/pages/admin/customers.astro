@@ -1,0 +1,31 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import QueryTable from '@/components/admin/QueryTable.astro';
+import { formatMoney } from '@/lib/money';
+
+const q = Astro.url.searchParams.get('q') ?? '';
+---
+
+<AdminLayout title="Customers" description="Order history, total spent and email preferences (phase 2)">
+  <form class="mb-4 flex max-w-md gap-2" role="search">
+    <input name="q" value={q} placeholder="Search by email" class="input flex-1 !min-h-10 !py-2 text-sm" aria-label="Search customers" />
+    <button class="btn btn-outline btn-sm"><span>Search</span></button>
+  </form>
+  <QueryTable
+    sql="SELECT c.email, c.name, c.marketing_consent, c.created_at, COUNT(o.id) AS orders, COALESCE(SUM(CASE WHEN o.currency='USD' THEN o.total END),0) AS usd, COALESCE(SUM(CASE WHEN o.currency='GBP' THEN o.total END),0) AS gbp FROM customers c LEFT JOIN orders o ON o.customer_id = c.id AND o.status NOT IN ('pending_payment','cancelled') WHERE c.email LIKE ? GROUP BY c.id ORDER BY c.created_at DESC LIMIT 200"
+    binds={[`%${q}%`]}
+    empty="No customers yet."
+    columns={[
+      { key: 'email', label: 'Email', class: 'font-semibold' },
+      { key: 'name', label: 'Name' },
+      { key: 'orders', label: 'Orders' },
+      {
+        key: 'usd',
+        label: 'Spent',
+        format: (_v, r) => [Number(r.usd) ? formatMoney(Number(r.usd), 'USD') : '', Number(r.gbp) ? formatMoney(Number(r.gbp), 'GBP') : ''].filter(Boolean).join(' · ') || '—',
+      },
+      { key: 'marketing_consent', label: 'Emails', format: (v) => (v ? 'Subscribed' : 'No') },
+      { key: 'created_at', label: 'Since', class: 'text-muted' },
+    ]}
+  />
+</AdminLayout>

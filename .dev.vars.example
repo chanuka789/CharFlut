@@ -1,0 +1,21 @@
+# Copy to .dev.vars for local development. Never commit .dev.vars.
+# In production, set each one with: npx wrangler secret put <NAME>
+PRINTIFY_API_TOKEN=
+PRINTIFY_SHOP_ID=
+PRINTFUL_API_TOKEN=
+WEBXPAY_SECRET_KEY=
+WEBXPAY_PUBLIC_KEY=
+WEBXPAY_BASE_URL=https://stagingxpay.info/index.php?route=checkout/billing
+WEBHOOK_SECRET_PATH=
+EMAIL_API_KEY=
+PRINTFUL_STORE_ID=
+EMAIL_FROM=CharFlut <hello@charflut.com>
+TURNSTILE_SECRET_KEY=
+ACCESS_AUD=
+ADMIN_OWNERS=
+ADMIN_MANAGERS=
+# Phase 2
+PAYPAL_CLIENT_ID=
+PAYPAL_CLIENT_SECRET=
+PAYPAL_WEBHOOK_ID=
+PAYPAL_ENV=sandbox

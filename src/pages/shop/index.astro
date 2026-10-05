@@ -1,0 +1,17 @@
+---
+import StoreLayout from '@/layouts/StoreLayout.astro';
+import ShopView from '@/components/commerce/ShopView.astro';
+import { products } from '@/data/catalog';
+
+const active = products.filter((p) => p.status === 'active');
+---
+
+<StoreLayout title="Shop all" description="Shop every CharFlut tee and hoodie. Heavyweight cotton, clean cuts, bold prints.">
+  <ShopView
+    title="Shop all"
+    lead="Every tee and hoodie, printed just for you and shipped to the US and UK."
+    products={active}
+    crumbs={[{ label: 'Home', href: '/' }, { label: 'Shop' }]}
+    outlineWord="SHOP"
+  />
+</StoreLayout>

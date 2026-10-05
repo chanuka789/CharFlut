@@ -1,0 +1,25 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import QueryTable from '@/components/admin/QueryTable.astro';
+import Notice from '@/components/admin/Notice.astro';
+---
+
+<AdminLayout title="Discounts" description="Percent, fixed and free-shipping codes with limits and dates (phase 2)">
+  <Notice>At launch, WELCOME10 (10% off) is defined in code (src/lib/server/checkout.ts). Codes stored here replace that list in phase 2.</Notice>
+  <QueryTable
+    sql="SELECT code, kind, value, currency, uses, max_uses, starts_at, ends_at, active FROM discounts ORDER BY code"
+    empty="No codes in the database yet."
+    columns={[
+      { key: 'code', label: 'Code', class: 'font-mono font-semibold' },
+      { key: 'kind', label: 'Type', class: 'capitalize' },
+      {
+        key: 'value',
+        label: 'Value',
+        format: (v, r) => (r.kind === 'percent' ? `${v}%` : r.kind === 'free_shipping' ? 'Free shipping' : `${(Number(v) / 100).toFixed(2)} ${r.currency ?? ''}`),
+      },
+      { key: 'uses', label: 'Used', format: (v, r) => `${v}${r.max_uses ? ` / ${r.max_uses}` : ''}` },
+      { key: 'ends_at', label: 'Ends', class: 'text-muted' },
+      { key: 'active', label: 'Active', format: (v) => (v ? 'Yes' : 'No') },
+    ]}
+  />
+</AdminLayout>

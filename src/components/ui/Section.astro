@@ -1,0 +1,34 @@
+---
+/**
+ * Page section with consistent rhythm. tone: light (white), paper (#F4F4F1), dark (black stage, switches tokens).
+ * spacing: default uses --section-y; "tight" halves it; "none" for full-bleed media.
+ */
+interface Props {
+  tone?: 'light' | 'paper' | 'dark';
+  spacing?: 'default' | 'tight' | 'none';
+  contained?: boolean;
+  id?: string;
+  class?: string;
+  label?: string;
+}
+const { tone = 'light', spacing = 'default', contained = true, id, class: className, label } = Astro.props;
+const toneClass = { light: 'bg-bg', paper: 'bg-surface', dark: 'bg-bg' }[tone];
+const spaceClass = { default: 'cf-section', tight: 'py-[calc(var(--section-y)/2)]', none: '' }[spacing];
+---
+
+<section
+  id={id}
+  aria-label={label}
+  data-theme={tone === 'dark' ? 'dark' : undefined}
+  class:list={['relative text-ink', toneClass, spaceClass, className]}
+>
+  {
+    contained ? (
+      <div class="cf-container">
+        <slot />
+      </div>
+    ) : (
+      <slot />
+    )
+  }
+</section>

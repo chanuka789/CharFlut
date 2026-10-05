@@ -1,0 +1,43 @@
+---
+/** Storefront pages: header, main, footer and the global overlays (cart, search, menu). */
+import BaseLayout, { type SeoProps } from './BaseLayout.astro';
+import Header from '@/components/layout/Header.astro';
+import Footer from '@/components/layout/Footer.astro';
+import Panels from '@/components/commerce/Panels';
+import { bestSellers, products } from '@/data/catalog';
+import { footerNav, mainNav } from '@/lib/nav';
+
+interface Props extends SeoProps {
+  headerOverlay?: boolean;
+  motion?: 'full' | 'calm';
+}
+const { headerOverlay = false, motion = 'full', ...seo } = Astro.props;
+
+const index = products.map((p) => ({
+  slug: p.slug,
+  title: p.title,
+  category: p.category,
+  design: p.design,
+  color: p.colors[0].hex,
+  ink: p.colors[0].ink,
+  price: p.price,
+  keywords: [p.title, p.category, p.fit, p.design, p.tagline, ...p.colors.map((c) => c.name)].join(' ').toLowerCase(),
+}));
+const menuSecondary = [...footerNav[1].links.slice(0, 4), { label: 'Account', href: '/account' }, { label: 'About', href: '/about' }];
+---
+
+<BaseLayout {...seo} motion={motion}>
+  <Header overlay={headerOverlay} />
+  <main id="main">
+    <slot />
+  </main>
+  <Footer />
+  <Panels
+    client:idle
+    transition:persist="panels"
+    index={index}
+    bestSellers={bestSellers().map((p) => p.slug)}
+    menuLinks={mainNav}
+    menuSecondary={menuSecondary}
+  />
+</BaseLayout>

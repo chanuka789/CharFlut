@@ -1,0 +1,118 @@
+---
+/**
+ * Single-series area chart (sales over time). Single series: no legend, the card title names it.
+ * 2px line, recessive grid, crosshair + tooltip on hover and keyboard focus, table view for screen readers.
+ */
+import { formatMoney } from '@/lib/money';
+
+interface Props {
+  data: { date: string; sales: number }[];
+  currency?: 'USD' | 'GBP';
+  label: string;
+}
+const { data, currency = 'USD', label } = Astro.props;
+const W = 720,
+  H = 240,
+  padL = 48,
+  padR = 12,
+  padT = 12,
+  padB = 28;
+const max = Math.max(1, ...data.map((d) => d.sales));
+const niceMax = Math.ceil(max / 10000) * 10000 || 10000;
+const x = (i: number) => padL + (i * (W - padL - padR)) / Math.max(1, data.length - 1);
+const y = (v: number) => padT + (1 - v / niceMax) * (H - padT - padB);
+const line = data.map((d, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(d.sales).toFixed(1)}`).join(' ');
+const area = `${line} L${x(data.length - 1)} ${H - padB} L${x(0)} ${H - padB} Z`;
+const ticks = [0, 0.5, 1].map((t) => Math.round(niceMax * t));
+const fmtDate = (s: string) => new Date(s + 'T00:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short', timeZone: 'UTC' });
+const id = `chart-${Math.random().toString(36).slice(2, 8)}`;
+const points = data.map((d, i) => ({ x: x(i), y: y(d.sales), label: fmtDate(d.date), value: formatMoney(d.sales, currency) }));
+---
+
+<figure class="relative" data-area-chart id={id} data-points={JSON.stringify(points)} data-w={W}>
+  <svg viewBox={`0 0 ${W} ${H}`} class="h-auto w-full overflow-visible" role="img" aria-label={label} tabindex="0">
+    <defs>
+      <linearGradient id={`${id}-fill`} x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#FFC800" stop-opacity="0.28"></stop>
+        <stop offset="1" stop-color="#FFC800" stop-opacity="0"></stop>
+      </linearGradient>
+    </defs>
+    {
+      ticks.map((t) => (
+        <g>
+          <line x1={padL} x2={W - padR} y1={y(t)} y2={y(t)} stroke="#333" stroke-width="1" />
+          <text x={padL - 8} y={y(t) + 4} text-anchor="end" font-size="11" fill="#b3b3b3">
+            {formatMoney(t, currency).replace(/\.00$/, '')}
+          </text>
+        </g>
+      ))
+    }
+    {
+      [0, Math.floor((data.length - 1) / 2), data.length - 1].map((i) => (
+        <text x={x(i)} y={H - 8} text-anchor={i === 0 ? 'start' : i === data.length - 1 ? 'end' : 'middle'} font-size="11" fill="#b3b3b3">
+          {fmtDate(data[i].date)}
+        </text>
+      ))
+    }
+    <path d={area} fill={`url(#${id}-fill)`}></path>
+    <path d={line} fill="none" stroke="#FFC800" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path>
+    <line data-cross x1="0" x2="0" y1={padT} y2={H - padB} stroke="#b3b3b3" stroke-width="1" opacity="0"></line>
+    <circle data-dot r="5" fill="#FFC800" stroke="#1c1c1c" stroke-width="2" opacity="0"></circle>
+  </svg>
+  <div data-tip class="pointer-events-none absolute top-0 hidden -translate-x-1/2 rounded-[var(--radius-md)] border border-line bg-[#111] px-3 py-2 text-xs shadow-lg">
+    <strong data-tip-value class="block text-sm text-ink"></strong>
+    <span data-tip-label class="text-muted"></span>
+  </div>
+  <table class="sr-only">
+    <caption>{label}</caption>
+    <thead><tr><th>Date</th><th>Sales</th></tr></thead>
+    <tbody>{points.map((p) => <tr><td>{p.label}</td><td>{p.value}</td></tr>)}</tbody>
+  </table>
+</figure>
+
+<script>
+  document.querySelectorAll<HTMLElement>('[data-area-chart]').forEach((fig) => {
+    const pts = JSON.parse(fig.dataset.points!) as { x: number; y: number; label: string; value: string }[];
+    const W = Number(fig.dataset.w);
+    const svg = fig.querySelector('svg')!;
+    const cross = fig.querySelector<SVGLineElement>('[data-cross]')!;
+    const dot = fig.querySelector<SVGCircleElement>('[data-dot]')!;
+    const tip = fig.querySelector<HTMLElement>('[data-tip]')!;
+    let idx = pts.length - 1;
+    const show = (i: number) => {
+      idx = Math.max(0, Math.min(pts.length - 1, i));
+      const p = pts[idx];
+      cross.setAttribute('x1', String(p.x));
+      cross.setAttribute('x2', String(p.x));
+      dot.setAttribute('cx', String(p.x));
+      dot.setAttribute('cy', String(p.y));
+      cross.setAttribute('opacity', '1');
+      dot.setAttribute('opacity', '1');
+      const scale = svg.getBoundingClientRect().width / W;
+      tip.style.left = `${p.x * scale}px`;
+      tip.style.top = `${Math.max(0, p.y * scale - 64)}px`;
+      tip.querySelector('[data-tip-value]')!.textContent = p.value;
+      tip.querySelector('[data-tip-label]')!.textContent = p.label;
+      tip.classList.remove('hidden');
+    };
+    const hide = () => {
+      cross.setAttribute('opacity', '0');
+      dot.setAttribute('opacity', '0');
+      tip.classList.add('hidden');
+    };
+    svg.addEventListener('pointermove', (e) => {
+      const r = svg.getBoundingClientRect();
+      const px = ((e.clientX - r.left) / r.width) * W;
+      let best = 0;
+      pts.forEach((p, i) => Math.abs(p.x - px) < Math.abs(pts[best].x - px) && (best = i));
+      show(best);
+    });
+    svg.addEventListener('pointerleave', hide);
+    svg.addEventListener('focus', () => show(idx));
+    svg.addEventListener('blur', hide);
+    svg.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft') show(idx - 1);
+      if (e.key === 'ArrowRight') show(idx + 1);
+    });
+  });
+</script>

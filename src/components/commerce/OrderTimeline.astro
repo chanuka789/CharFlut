@@ -1,0 +1,67 @@
+---
+/** Order status timeline, used by Track order and Account > Orders. */
+import Icon from '@/components/ui/Icon.astro';
+import { formatMoney } from '@/lib/money';
+import type { OrderView } from '@/lib/server/orders';
+
+interface Props {
+  order: OrderView;
+}
+const { order } = Astro.props;
+const steps = [
+  { key: 'paid', label: 'Order placed' },
+  { key: 'in_production', label: 'Printing' },
+  { key: 'shipped', label: 'Shipped' },
+  { key: 'delivered', label: 'Delivered' },
+];
+const rank: Record<string, number> = { pending_payment: -1, needs_attention: 0, paid: 0, in_production: 1, shipped: 2, delivered: 3 };
+const current = rank[order.status] ?? 0;
+---
+
+<div class="panel-line">
+  <div class="flex flex-wrap items-baseline justify-between gap-3">
+    <h2 class="t-h3">Order {order.number}</h2>
+    <p class="t-small t-muted">{formatMoney(order.total, order.currency)} · {new Date(order.createdAt + 'Z').toLocaleDateString('en-GB')}</p>
+  </div>
+  <ol class="mt-8 grid grid-cols-4 gap-2">
+    {
+      steps.map((s, i) => (
+        <li class="flex flex-col gap-3">
+          <span class:list={['h-1.5 rounded-full', i <= current ? 'bg-ink' : 'bg-line']} />
+          <span class:list={['flex items-center gap-1.5 text-xs font-semibold sm:text-sm', i > current && 'text-muted']}>
+            {i <= current && <Icon name="check" size={14} />}
+            {s.label}
+          </span>
+        </li>
+      ))
+    }
+  </ol>
+  {order.status === 'cancelled' && <p class="mt-6 font-semibold">This order was cancelled.</p>}
+  {order.status === 'refunded' && <p class="mt-6 font-semibold">This order was refunded.</p>}
+  <ul class="mt-8 divide-y divide-line border-t border-line text-sm">
+    {
+      order.items.map((it) => (
+        <li class="flex justify-between py-3">
+          <span>
+            {it.title} <span class="t-muted">· {it.colorName} · {it.size}</span>
+          </span>
+          <span>×{it.quantity}</span>
+        </li>
+      ))
+    }
+  </ul>
+  {
+    order.shipments.filter((s) => s.trackingUrl).length > 0 && (
+      <div class="mt-6 flex flex-wrap gap-3">
+        {order.shipments
+          .filter((s) => s.trackingUrl)
+          .map((s, i) => (
+            <a href={s.trackingUrl} target="_blank" rel="noopener" class="btn btn-outline btn-sm">
+              <Icon name="truck" size={18} /> <span>Track parcel {i + 1}{s.carrier ? ` (${s.carrier})` : ''}</span>
+            </a>
+          ))}
+      </div>
+    )
+  }
+  {order.shipments.length > 1 && <p class="t-small t-muted mt-4">Your order ships in {order.shipments.length} parcels from different print partners.</p>}
+</div>

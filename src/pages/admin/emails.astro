@@ -1,0 +1,28 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AdminCard from '@/components/admin/AdminCard.astro';
+import { getEnv } from '@/lib/server/db';
+
+const env = getEnv();
+const templates = [
+  { name: 'Order confirmed', trigger: 'Payment verified', status: 'Phase 1' },
+  { name: 'Shipped', trigger: 'Provider shipment webhook', status: 'Phase 3' },
+  { name: 'Delivered', trigger: 'Provider delivered webhook', status: 'Phase 3' },
+  { name: 'Abandoned cart', trigger: '24 hours after a saved cart with an email', status: 'Phase 3' },
+  { name: 'Welcome + 10% code', trigger: 'Newsletter sign-up', status: 'Phase 3' },
+  { name: 'Sign-in link', trigger: 'Account sign-in', status: 'Live' },
+];
+---
+
+<AdminLayout title="Emails" description="Transactional and marketing templates (phase 3)">
+  <p class="mb-4 text-sm text-muted">Email service: {env.EMAIL_API_KEY ? 'connected (Resend)' : 'not connected — emails are only logged'}.</p>
+  <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    {
+      templates.map((t) => (
+        <AdminCard title={t.name} subtitle={t.trigger}>
+          <span class={t.status === 'Live' ? 'badge badge-success' : 'badge'}>{t.status}</span>
+        </AdminCard>
+      ))
+    }
+  </div>
+</AdminLayout>

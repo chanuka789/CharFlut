@@ -1,0 +1,52 @@
+---
+import StoreLayout from '@/layouts/StoreLayout.astro';
+import Field from '@/components/ui/Field.astro';
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { requestMagicLink } from '@/lib/server/auth';
+
+let sent = false;
+let error = '';
+if (Astro.request.method === 'POST') {
+  const email = String((await Astro.request.formData()).get('email') ?? '').trim();
+  if (/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
+    await requestMagicLink(email, Astro.url.origin);
+    sent = true; // Same answer whether or not the email has an account (no account discovery).
+  } else error = 'Enter a valid email address.';
+}
+const expired = Astro.url.searchParams.get('expired') === '1';
+---
+
+<StoreLayout title="Sign in" noindex>
+  <section class="grid min-h-[100svh] bg-bg pt-[calc(var(--header-h)+var(--bar-h))] lg:grid-cols-2">
+    <div class="hidden items-end bg-black p-12 text-white lg:flex" data-theme="dark">
+      <div>
+        <img src="/brand/icon.svg" alt="" width="72" height="72" class="mb-10" />
+        <p class="t-h1">No passwords.<br />Just a link.</p>
+        <p class="t-lead mt-4 max-w-sm !text-white/70">See your orders, track parcels, save addresses and your wishlist.</p>
+      </div>
+    </div>
+    <div class="grid place-items-center px-[var(--gutter)] py-16">
+      <div class="w-full max-w-md">
+        {
+          sent ? (
+            <div role="status">
+              <span class="mb-6 grid size-14 place-items-center rounded-full bg-brand text-black"><Icon name="mail" /></span>
+              <h1 class="t-h2">Check your inbox</h1>
+              <p class="t-lead mt-3">If that email can sign in, a link is on its way. It works once and expires in 20 minutes.</p>
+            </div>
+          ) : (
+            <form method="post" class="grid gap-5" novalidate>
+              <h1 class="t-h2">Sign in or create an account</h1>
+              {expired && <p class="field-error">That link has expired or was already used. Ask for a new one.</p>}
+              <p class="t-muted">Enter your email and we will send you a sign-in link.</p>
+              <Field label="Email" name="email" type="email" required autocomplete="email" error={error || undefined} />
+              <Button type="submit" variant="dark" block arrow>Email me a link</Button>
+              <p class="t-small t-muted">Checked out as a guest? Use the same email and your orders appear automatically.</p>
+            </form>
+          )
+        }
+      </div>
+    </div>
+  </section>
+</StoreLayout>

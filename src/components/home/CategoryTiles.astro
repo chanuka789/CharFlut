@@ -1,0 +1,35 @@
+---
+/** "Shop by category" (plan 04 #4): two big tiles, each with a parallax garment. */
+import Garment from '@/components/product/Garment';
+import Icon from '@/components/ui/Icon.astro';
+import SectionHeader from '@/components/ui/SectionHeader.astro';
+
+const tiles = [
+  { href: '/shop/tees', title: 'Tees', count: '6 styles', category: 'tees' as const, bg: 'bg-surface text-black', garment: '#141414', ink: '#FFC800', design: 'wordmark' as const },
+  { href: '/shop/hoodies', title: 'Hoodies', count: '6 styles', category: 'hoodies' as const, bg: 'bg-black text-white', garment: '#D9CBB0', ink: '#111111', design: 'monogram' as const },
+];
+---
+
+<section class="cf-section bg-bg">
+  <div class="cf-container">
+    <SectionHeader eyebrow="Shop by category" title="Two shapes. Done properly." />
+    <div class="grid gap-3 sm:gap-5 md:grid-cols-2">
+      {
+        tiles.map((t) => (
+          <a href={t.href} class:list={['tile group relative block aspect-[4/5] overflow-hidden rounded-[var(--radius-lg)] md:aspect-[5/6]', t.bg]} data-cursor="view" data-reveal>
+            <div class="absolute inset-[8%] top-[14%] transition-transform duration-700 ease-[var(--ease-out)] group-hover:scale-[1.04]" data-parallax="0.18">
+              <Garment category={t.category} color={t.garment} ink={t.ink} design={t.design} className="h-full w-full drop-shadow-[0_30px_40px_rgba(0,0,0,0.25)]" />
+            </div>
+            <div class="absolute inset-x-0 top-0 flex items-start justify-between p-5 sm:p-8">
+              <h3 class="font-display text-[clamp(2.75rem,12vw,6.5rem)] font-black uppercase leading-[0.85] md:text-[clamp(2.75rem,5.6vw,6.5rem)] tracking-tight">{t.title}</h3>
+              <span class="grid size-12 shrink-0 place-items-center rounded-full border border-current transition-colors duration-300 group-hover:bg-brand group-hover:border-brand group-hover:text-black sm:size-14">
+                <Icon name="arrow-up-right" />
+              </span>
+            </div>
+            <p class="t-label absolute bottom-5 left-5 sm:bottom-8 sm:left-8">{t.count}</p>
+          </a>
+        ))
+      }
+    </div>
+  </div>
+</section>

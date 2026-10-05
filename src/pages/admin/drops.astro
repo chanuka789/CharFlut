@@ -1,0 +1,28 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AdminCard from '@/components/admin/AdminCard.astro';
+import { drops, getProduct } from '@/data/catalog';
+---
+
+<AdminLayout title="Collections and drops" description="Launch dates, countdowns, hero and 3D light colour (phase 2)">
+  <div class="grid gap-3 lg:grid-cols-2">
+    {
+      drops.map((d) => (
+        <AdminCard title={`Drop ${d.number}: ${d.title}`} subtitle={new Date(d.launchAt).toLocaleString('en-GB')}>
+          <span slot="actions" class="inline-flex items-center gap-2 text-sm text-muted">
+            <span class="inline-block size-4 rounded-full ring-1 ring-line" style={`background:${d.lightHex}`} /> {d.lightHex}
+          </span>
+          <p class="text-sm text-muted">{d.story}</p>
+          <ul class="mt-4 flex flex-wrap gap-2">
+            {d.productSlugs.map((s) => (
+              <li class="badge">{getProduct(s)?.title ?? s}</li>
+            ))}
+          </ul>
+          <a href={`/drops/${d.slug}`} target="_blank" class="mt-4 inline-block text-sm font-semibold">
+            Preview →
+          </a>
+        </AdminCard>
+      ))
+    }
+  </div>
+</AdminLayout>

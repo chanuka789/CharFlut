@@ -1,0 +1,56 @@
+---
+/** About: the brand story, with parallax layers (plan 02 allows parallax on About). */
+import StoreLayout from '@/layouts/StoreLayout.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import Section from '@/components/ui/Section.astro';
+import Editorial from '@/components/home/Editorial.astro';
+import Marquee from '@/components/ui/Marquee.astro';
+import Button from '@/components/ui/Button.astro';
+
+const values = [
+  { k: 'Clean', body: 'Simple cuts, strong fabric, nothing extra. A tee should feel finished on its own.' },
+  { k: 'Bold', body: 'One confident print per piece. Big when it counts, small when it does not.' },
+  { k: 'Honest', body: 'Printed to order, so shipping takes a few days. We tell you the real dates and the real price.' },
+];
+---
+
+<StoreLayout title="About" description="CharFlut is a fashion label for clean cuts and bold prints, printed on demand for the US and UK.">
+  <PageHeader
+    title="Clean cuts. Bold prints."
+    eyebrow="About CharFlut"
+    lead="CharFlut is a small fashion label. We design heavyweight tees and hoodies that are printed only when you order them, then shipped to the US and UK."
+    crumbs={[{ label: 'Home', href: '/' }, { label: 'About' }]}
+    outlineWord="ABOUT"
+  />
+  <Section tone="light" spacing="none" class="pb-[var(--section-y)]">
+    <Editorial class="aspect-[4/5] md:aspect-[21/9]" tone="#111111" word="CHARFLUT" category="hoodies" color="#D9CBB0" ink="#111111" design="stack" view="back" />
+  </Section>
+  <Section tone="light">
+    <div class="grid gap-12 lg:grid-cols-12">
+      <h2 class="t-h1 lg:col-span-5" data-split>Made when you want it. Not before.</h2>
+      <div class="t-lead space-y-6 lg:col-span-6 lg:col-start-7" data-reveal>
+        <p>Most clothing is made in huge batches and a lot of it is never worn. We work the other way round. Each design starts as flat artwork, and it only becomes a garment after you order it.</p>
+        <p>Our print partners in the US and UK print, pack and ship each piece. That keeps waste low and lets us release small drops often, without warehouses full of stock.</p>
+        <p>What we control: the design, the blanks we choose, the fit, and how we treat you. What we promise: real dates, fair prices and a free replacement if anything arrives wrong.</p>
+      </div>
+    </div>
+  </Section>
+  <Marquee tone="dark" items={['Clean', 'Bold', 'Honest', 'Your own']} />
+  <Section tone="paper">
+    <ol class="grid gap-3 sm:gap-5 md:grid-cols-3">
+      {
+        values.map((v, i) => (
+          <li class="panel-line" data-reveal>
+            <p class="font-display text-sm font-black text-muted">0{i + 1}</p>
+            <h3 class="t-h2 mt-3">{v.k}</h3>
+            <p class="t-muted mt-3">{v.body}</p>
+          </li>
+        ))
+      }
+    </ol>
+    <div class="mt-16 flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
+      <p class="t-h2 max-w-xl">Start with the piece everyone starts with.</p>
+      <Button href="/shop/tees/cf-monogram-heavy-tee" size="lg" arrow magnetic>Shop the Monogram Tee</Button>
+    </div>
+  </Section>
+</StoreLayout>

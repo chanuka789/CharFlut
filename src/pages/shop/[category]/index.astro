@@ -1,0 +1,22 @@
+---
+import StoreLayout from '@/layouts/StoreLayout.astro';
+import ShopView from '@/components/commerce/ShopView.astro';
+import { categories, getProductsByCategory } from '@/data/catalog';
+import type { CategorySlug } from '@/lib/types';
+
+const slug = Astro.params.category as CategorySlug;
+const cat = categories[slug];
+if (!cat) return Astro.rewrite('/404');
+const items = getProductsByCategory(slug).filter((p) => p.status === 'active');
+---
+
+<StoreLayout title={cat.title} description={cat.blurb}>
+  <ShopView
+    title={cat.title}
+    lead={cat.blurb}
+    products={items}
+    category={slug}
+    crumbs={[{ label: 'Home', href: '/' }, { label: 'Shop', href: '/shop' }, { label: cat.title }]}
+    outlineWord={cat.title.toUpperCase()}
+  />
+</StoreLayout>

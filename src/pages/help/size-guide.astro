@@ -1,0 +1,72 @@
+---
+import ContentLayout from '@/layouts/ContentLayout.astro';
+import FitFinder from '@/components/product/FitFinder';
+
+const tees = [
+  ['XS', 48, 69, 19, 27],
+  ['S', 51, 71, 20, 28],
+  ['M', 56, 74, 21, 29],
+  ['L', 61, 76, 22, 30],
+  ['XL', 66, 79, 23.5, 31],
+  ['2XL', 71, 81, 25, 32],
+];
+const hoodies = [
+  ['S', 58, 70, 23, 27.5],
+  ['M', 61, 72, 24, 28.5],
+  ['L', 64, 74, 25, 29],
+  ['XL', 67, 76, 26.5, 30],
+  ['2XL', 70, 78, 27.5, 30.5],
+  ['3XL', 73, 80, 29, 31.5],
+];
+---
+
+<ContentLayout
+  section="help"
+  title="Size guide"
+  heading="Size guide"
+  lead="Garment measurements, laid flat. Compare with a tee you already love. Measurements may vary by 2 cm (1 in)."
+>
+  <h2>Find your fit</h2>
+  <FitFinder client:visible />
+
+  <h2>Oversized and regular tees</h2>
+  <div class="table-scroll" data-lenis-prevent-touch>
+    <table class="table">
+      <thead><tr><th>Size</th><th>Chest width</th><th>Body length</th></tr></thead>
+      <tbody>
+        {
+          tees.map(([s, w, l, wi, li]) => (
+            <tr>
+              <td class="font-semibold">{s}</td>
+              <td>{w} cm / {wi} in</td>
+              <td>{l} cm / {li} in</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+  <h2>Hoodies</h2>
+  <div class="table-scroll" data-lenis-prevent-touch>
+    <table class="table">
+      <thead><tr><th>Size</th><th>Chest width</th><th>Body length</th></tr></thead>
+      <tbody>
+        {
+          hoodies.map(([s, w, l, wi, li]) => (
+            <tr>
+              <td class="font-semibold">{s}</td>
+              <td>{w} cm / {wi} in</td>
+              <td>{l} cm / {li} in</td>
+            </tr>
+          ))
+        }
+      </tbody>
+    </table>
+  </div>
+  <h2>How to measure</h2>
+  <ul>
+    <li><strong>Chest width:</strong> lay the garment flat and measure straight across, 2.5 cm (1 in) below the armholes.</li>
+    <li><strong>Body length:</strong> from the highest point of the shoulder to the hem.</li>
+  </ul>
+  <p>Replace these sample numbers with the exact blank measurements from your Printify or Printful product pages before launch.</p>
+</ContentLayout>

@@ -1,0 +1,20 @@
+---
+/** Newsletter (plan 04 #9): "Get first access to drops", with a 10% welcome code. */
+import NewsletterForm from '@/components/commerce/NewsletterForm.astro';
+---
+
+<section class="cf-section relative overflow-hidden bg-surface">
+  <div class="cf-container grid items-center gap-10 lg:grid-cols-2">
+    <div>
+      <p class="t-label t-muted mb-4" data-reveal>Members get 10% off</p>
+      <h2 class="t-h1" data-split>Get first access to drops.</h2>
+    </div>
+    <div data-reveal>
+      <p class="t-lead mb-6 max-w-md">Join the list for early access, drop dates and a 10% welcome code. One email per drop, never more.</p>
+      <NewsletterForm source="home" class="max-w-lg" />
+    </div>
+  </div>
+  <p aria-hidden="true" class="t-display t-outline-ink pointer-events-none absolute -bottom-[0.2em] left-0 whitespace-nowrap opacity-[0.08]" data-parallax="0.3">
+    FIRST ACCESS FIRST ACCESS
+  </p>
+</section>

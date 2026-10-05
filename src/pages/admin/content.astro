@@ -1,0 +1,28 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AdminCard from '@/components/admin/AdminCard.astro';
+
+const blocks = [
+  { name: 'Home hero', where: '/', fields: 'Headline, sub-line, buttons, 3D garment and print' },
+  { name: 'Marquee', where: '/', fields: 'Offer messages' },
+  { name: 'Lookbook', where: '/lookbook', fields: 'Images, product tags, order' },
+  { name: 'FAQ', where: '/help/faq', fields: 'Questions and answers' },
+  { name: 'Policies', where: '/legal/privacy', fields: 'Privacy, terms, cookies, returns' },
+  { name: 'Announcement bar', where: '/', fields: 'Free-shipping text per currency' },
+];
+---
+
+<AdminLayout title="Content" description="Edit home sections, banners, lookbook, FAQ and policies with preview (phase 3)">
+  <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+    {
+      blocks.map((b) => (
+        <AdminCard title={b.name} subtitle={b.where}>
+          <p class="text-sm text-muted">{b.fields}</p>
+          <a href={b.where} target="_blank" class="mt-3 inline-block text-sm font-semibold">
+            Preview →
+          </a>
+        </AdminCard>
+      ))
+    }
+  </div>
+</AdminLayout>

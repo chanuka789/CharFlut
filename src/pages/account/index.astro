@@ -1,0 +1,50 @@
+---
+import AccountLayout from '@/layouts/AccountLayout.astro';
+import Icon from '@/components/ui/Icon.astro';
+import StatusBadge from '@/components/commerce/StatusBadge.astro';
+import { customerOrders, requireCustomer } from '@/lib/server/account';
+import { formatMoney } from '@/lib/money';
+
+const customer = await requireCustomer(Astro);
+if (customer instanceof Response) return customer;
+const orders = await customerOrders(customer);
+const latest = orders[0];
+const tiles = [
+  { href: '/account/orders', icon: 'box' as const, title: 'Orders', body: `${orders.length} orders` },
+  { href: '/account/wishlist', icon: 'heart' as const, title: 'Wishlist', body: 'Saved pieces' },
+  { href: '/account/addresses', icon: 'home' as const, title: 'Addresses', body: 'Faster checkout' },
+  { href: '/account/profile', icon: 'mail' as const, title: 'Email preferences', body: customer.marketing_consent ? 'Drop emails on' : 'Drop emails off' },
+];
+---
+
+<AccountLayout title={`Hi${customer.name ? `, ${customer.name.split(' ')[0]}` : ''}.`} customer={customer}>
+  {
+    latest && (
+      <a href="/account/orders" class="panel mb-6 flex flex-wrap items-center justify-between gap-4 transition-transform hover:-translate-y-0.5">
+        <div>
+          <p class="t-label t-muted">Latest order</p>
+          <p class="t-h3 mt-1">{latest.number}</p>
+        </div>
+        <div class="flex items-center gap-4">
+          <StatusBadge status={latest.status} />
+          <span class="t-price">{formatMoney(latest.total, latest.currency)}</span>
+          <Icon name="arrow-right" />
+        </div>
+      </a>
+    )
+  }
+  <div class="grid gap-3 sm:grid-cols-2">
+    {
+      tiles.map((t) => (
+        <a href={t.href} class="panel-line group flex items-center gap-4 transition-colors hover:border-ink">
+          <span class="grid size-12 place-items-center rounded-full bg-surface"><Icon name={t.icon} /></span>
+          <span class="flex-1">
+            <strong class="block">{t.title}</strong>
+            <span class="t-small t-muted">{t.body}</span>
+          </span>
+          <Icon name="arrow-right" class="transition-transform group-hover:translate-x-1" />
+        </a>
+      ))
+    }
+  </div>
+</AccountLayout>

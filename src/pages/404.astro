@@ -1,0 +1,26 @@
+---
+/** 404 with a 3D CF monogram you can spin (plan 04, system pages). */
+import StoreLayout from '@/layouts/StoreLayout.astro';
+import Button from '@/components/ui/Button.astro';
+import Monogram404 from '@/three/Monogram404';
+---
+
+<StoreLayout title="Page not found" noindex>
+  <section data-theme="dark" class="relative grid min-h-[100svh] items-center overflow-hidden bg-bg pt-[calc(var(--header-h)+var(--bar-h))] text-ink cf-grain">
+    <p aria-hidden="true" class="t-display pointer-events-none absolute inset-x-0 top-1/2 -translate-y-1/2 select-none text-center text-[38vw] leading-none text-white/[0.05]">404</p>
+    <div class="cf-container relative grid items-center gap-8 lg:grid-cols-2">
+      <div class="order-2 lg:order-1">
+        <p class="t-label t-muted mb-4">Error 404</p>
+        <h1 class="t-h1" data-split>This page went off-print.</h1>
+        <p class="t-lead mt-5 max-w-md">The link may be old, or the piece may have sold out. Spin the mark, then head back to the shop.</p>
+        <div class="mt-8 flex flex-wrap gap-3">
+          <Button href="/shop" arrow magnetic>Shop all</Button>
+          <Button href="/" variant="outline">Home</Button>
+        </div>
+      </div>
+      <div class="order-1 h-[38vh] lg:order-2 lg:h-[60vh]">
+        <Monogram404 client:only="react" />
+      </div>
+    </div>
+  </section>
+</StoreLayout>

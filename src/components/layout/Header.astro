@@ -1,0 +1,96 @@
+---
+/**
+ * Global header (plan 04): free-shipping bar, CF logo left, nav centre, icons right.
+ * Hides on scroll down, returns on scroll up. `overlay` = transparent over a dark hero until scrolled.
+ */
+import Logo from '@/components/ui/Logo.astro';
+import HeaderActions from '@/components/commerce/HeaderActions';
+import { mainNav } from '@/lib/nav';
+
+interface Props {
+  overlay?: boolean;
+}
+const { overlay = false } = Astro.props;
+const path = Astro.url.pathname;
+const isActive = (href: string) => (href === '/shop' ? path === '/shop' : path.startsWith(href));
+---
+
+<header
+  class="site-header fixed inset-x-0 top-0 z-50"
+  data-site-header
+  data-overlay={overlay ? 'true' : 'false'}
+  data-scrolled="false"
+  data-hidden="false"
+>
+  <div class="announce bg-black text-white">
+    <p class="cf-container flex h-[var(--bar-h)] items-center justify-center gap-2 text-center text-[0.8125rem] font-medium">
+      <span data-cur="USD">Free shipping to the US on orders over $60</span>
+      <span data-cur="GBP">Free UK shipping on orders over £50</span>
+      <span class="hidden sm:inline">· Printed to order, ships in 2–5 days</span>
+    </p>
+  </div>
+  <div class="header-bar">
+    <div class="cf-container grid h-[var(--header-h)] grid-cols-[1fr_auto] items-center gap-4 lg:grid-cols-[1fr_auto_1fr]">
+      <a href="/" class="logo-link relative flex w-fit items-center" aria-label="CharFlut home">
+        <Logo variant="primary" height={26} class="logo-light h-[22px] w-auto sm:h-[26px]" />
+        <Logo variant="reversed" height={26} class="logo-dark absolute left-0 h-[22px] w-auto sm:h-[26px]" />
+      </a>
+      <nav aria-label="Main" class="hidden lg:block">
+        <ul class="flex items-center gap-8 font-display text-[0.875rem] font-extrabold uppercase tracking-wide">
+          {
+            mainNav.map((l) => (
+              <li>
+                <a href={l.href} class="cf-link" aria-current={isActive(l.href) ? 'page' : undefined}>
+                  {l.label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+      <div class="flex justify-end">
+        <HeaderActions client:load />
+      </div>
+    </div>
+  </div>
+</header>
+
+<style>
+  .site-header {
+    transition: transform 450ms var(--ease-out);
+  }
+  .site-header[data-hidden='true'] {
+    transform: translateY(-100%);
+  }
+  .header-bar {
+    background: color-mix(in srgb, var(--color-bg) 92%, transparent);
+    backdrop-filter: saturate(1.4) blur(14px);
+    -webkit-backdrop-filter: saturate(1.4) blur(14px);
+    border-bottom: 1px solid var(--color-line);
+    color: var(--color-ink);
+    transition:
+      background-color var(--duration-base) var(--ease-out),
+      color var(--duration-base) var(--ease-out),
+      border-color var(--duration-base) var(--ease-out);
+  }
+  .logo-dark {
+    opacity: 0;
+  }
+  /* Transparent over dark hero until the visitor scrolls */
+  .site-header[data-overlay='true'][data-scrolled='false'] .header-bar {
+    background: transparent;
+    backdrop-filter: none;
+    border-color: transparent;
+    color: #fff;
+  }
+  .site-header[data-overlay='true'][data-scrolled='false'] .logo-light {
+    opacity: 0;
+  }
+  .site-header[data-overlay='true'][data-scrolled='false'] .logo-dark {
+    opacity: 1;
+  }
+  .logo-light,
+  .logo-dark {
+    transition: opacity var(--duration-base) var(--ease-out);
+  }
+</style>

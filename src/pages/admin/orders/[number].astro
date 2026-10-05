@@ -1,0 +1,164 @@
+---
+import AdminLayout from '@/layouts/AdminLayout.astro';
+import AdminCard from '@/components/admin/AdminCard.astro';
+import Notice from '@/components/admin/Notice.astro';
+import StatusBadge from '@/components/commerce/StatusBadge.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { getOrderDetail } from '@/lib/server/admin-data';
+import { formatMoney } from '@/lib/money';
+
+const { sample, order: o } = await getOrderDetail(Astro.params.number!);
+if (!o) return Astro.redirect('/admin/orders');
+const m = (n: number) => formatMoney(n, o.currency);
+const done = Astro.url.searchParams.get('done');
+const err = Astro.url.searchParams.get('error');
+const a = o.address;
+---
+
+<AdminLayout title={`Order ${o.number}`} description={o.email}>
+  {sample && <Notice>Sample order (local database has no orders yet). Actions are disabled.</Notice>}
+  {done && <Notice>Done: {done.replace(/-/g, ' ')}.</Notice>}
+  {err && <Notice tone="danger">{err}</Notice>}
+  {
+    o.status === 'needs_attention' && (
+      <Notice tone="warn">
+        <strong>Check before sending to production.</strong> Confirm in the WebXPay merchant portal that {m(o.total)} was captured for
+        this order (the WebXPay return does not sign the amount), or read the provider error below. Then approve.
+      </Notice>
+    )
+  }
+
+  <div class="mb-6 flex flex-wrap items-center gap-3">
+    <StatusBadge status={o.status} />
+    <span class="text-sm text-muted">{o.items} items · {o.country === 'GB' ? 'United Kingdom' : 'United States'} · {o.created_at}</span>
+  </div>
+
+  <div class="grid gap-3 xl:grid-cols-3">
+    <div class="grid content-start gap-3 xl:col-span-2">
+      <AdminCard title="Items" flush>
+        <table class="table table-stack">
+          <thead><tr><th>Product</th><th>Variant</th><th>Qty</th><th>Provider</th><th class="text-right">Price</th></tr></thead>
+          <tbody>
+            {
+              o.lines.map((l) => (
+                <tr>
+                  <td data-label="Product" class="font-semibold">{l.title}</td>
+                  <td data-label="Variant" class="text-muted">{l.color_name} · {l.size}</td>
+                  <td data-label="Qty">{l.quantity}</td>
+                  <td data-label="Provider" class="capitalize">{l.provider}</td>
+                  <td data-label="Price" class="t-price md:text-right">{m(l.unit_price * l.quantity)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+        <dl class="space-y-1.5 border-t border-line p-5 text-sm">
+          <div class="flex justify-between"><dt class="text-muted">Subtotal</dt><dd>{m(o.subtotal)}</dd></div>
+          {o.discount > 0 && <div class="flex justify-between"><dt class="text-muted">Discount</dt><dd>−{m(o.discount)}</dd></div>}
+          <div class="flex justify-between"><dt class="text-muted">Shipping</dt><dd>{m(o.shipping)}</dd></div>
+          {o.tax > 0 && <div class="flex justify-between"><dt class="text-muted">{o.currency === 'GBP' ? 'VAT (included)' : 'Tax'}</dt><dd>{m(o.tax)}</dd></div>}
+          <div class="flex justify-between pt-2 text-base font-semibold"><dt>Total</dt><dd>{m(o.total)}</dd></div>
+        </dl>
+      </AdminCard>
+
+      <AdminCard title="Provider orders" subtitle="One per provider; created only after payment is confirmed">
+        <ul class="divide-y divide-line">
+          {
+            o.providerOrders.length ? (
+              o.providerOrders.map((p) => (
+                <li class="flex flex-wrap items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                  <div>
+                    <p class="font-semibold capitalize">{p.provider}</p>
+                    <p class="text-sm text-muted">{p.external_id ? `ID ${p.external_id}` : 'Not created yet'} · {p.attempts} attempts</p>
+                    {p.last_error && <p class="mt-1 text-sm text-danger">{p.last_error}</p>}
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <StatusBadge status={p.status} />
+                    {p.tracking_url && (
+                      <a href={p.tracking_url} target="_blank" rel="noopener" class="text-sm font-semibold underline">
+                        Tracking
+                      </a>
+                    )}
+                  </div>
+                </li>
+              ))
+            ) : (
+              <li class="text-sm text-muted">Nothing sent yet.</li>
+            )
+          }
+        </ul>
+      </AdminCard>
+
+      <AdminCard title="Payments" flush>
+        <table class="table table-stack">
+          <thead><tr><th>Method</th><th>Reference</th><th>Code</th><th>Status</th><th class="text-right">Amount</th></tr></thead>
+          <tbody>
+            {
+              o.payments.map((p) => (
+                <tr>
+                  <td data-label="Method" class="capitalize">{p.method}</td>
+                  <td data-label="Reference" class="font-mono text-xs">{p.reference}</td>
+                  <td data-label="Code">{p.status_code}</td>
+                  <td data-label="Status"><span class={p.status === 'approved' ? 'badge badge-success' : 'badge badge-danger'}>{p.status}</span></td>
+                  <td data-label="Amount" class="md:text-right">{m(p.amount)}</td>
+                </tr>
+              ))
+            }
+          </tbody>
+        </table>
+      </AdminCard>
+    </div>
+
+    <div class="grid content-start gap-3">
+      <AdminCard title="Actions">
+        <form method="post" action={`/api/admin/orders/${o.number}`} class="grid gap-2">
+          <fieldset disabled={sample} class="grid gap-2">
+            {
+              o.status === 'needs_attention' && (
+                <button name="action" value="approve" class="btn btn-primary btn-block">
+                  <Icon name="check" size={18} />
+                  <span>Approve and send to provider</span>
+                </button>
+              )
+            }
+            {
+              (o.status === 'paid' || o.status === 'in_production') && (
+                <button name="action" value="resend" class="btn btn-outline btn-block">
+                  <Icon name="refresh" size={18} />
+                  <span>Retry provider orders</span>
+                </button>
+              )
+            }
+            <button name="action" value="refunded" class="btn btn-ghost btn-block" data-confirm="Mark this order as refunded? Refund the card in the WebXPay portal first.">
+              <span>Mark refunded</span>
+            </button>
+            <button name="action" value="cancel" class="btn btn-ghost btn-block !text-danger" data-confirm="Cancel this order? Provider orders that are not in production will be cancelled.">
+              <span>Cancel order</span>
+            </button>
+          </fieldset>
+        </form>
+      </AdminCard>
+      <AdminCard title="Ship to">
+        <address class="text-sm not-italic leading-relaxed">
+          {a.firstName} {a.lastName}<br />
+          {a.address1}{a.address2 ? `, ${a.address2}` : ''}<br />
+          {a.city} {a.region} {a.postcode}<br />
+          {a.country === 'GB' ? 'United Kingdom' : 'United States'}<br />
+          <span class="text-muted">{a.phone}</span>
+        </address>
+      </AdminCard>
+      <AdminCard title="Customer">
+        <p class="text-sm">{o.email}</p>
+        <a href={`/admin/customers?q=${encodeURIComponent(o.email)}`} class="mt-2 inline-block text-sm font-semibold text-muted hover:text-ink">Order history →</a>
+      </AdminCard>
+    </div>
+  </div>
+</AdminLayout>
+
+<script>
+  document.querySelectorAll<HTMLButtonElement>('[data-confirm]').forEach((b) =>
+    b.addEventListener('click', (e) => {
+      if (!confirm(b.dataset.confirm!)) e.preventDefault();
+    }),
+  );
+</script>

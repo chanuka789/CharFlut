@@ -1,0 +1,112 @@
+---
+/**
+ * Product media (plan 04, Product #1): photo gallery + 3D viewer tab.
+ * Desktop: two-column stacked gallery beside the sticky buy box. Phones: swipe carousel with dots.
+ * Every 3D view has a normal image gallery next to it, so nobody needs 3D to buy (plan 02, accessibility).
+ */
+import Garment from './Garment';
+import ProductViewer from '@/three/ProductViewer';
+import Icon from '@/components/ui/Icon.astro';
+import type { Product } from '@/lib/types';
+
+interface Props {
+  product: Product;
+}
+const { product: p } = Astro.props;
+const c = p.colors[0];
+const alt = p.colors[1] ?? c;
+const shots = [
+  { key: 'front', view: 'front' as const, color: c, label: `${p.title}, front, ${c.name}` },
+  { key: 'back', view: 'back' as const, color: c, label: `${p.title}, back, ${c.name}` },
+  { key: 'alt', view: 'front' as const, color: alt, label: `${p.title}, front, ${alt.name}` },
+  { key: 'alt-back', view: 'back' as const, color: alt, label: `${p.title}, back, ${alt.name}` },
+];
+---
+
+<div class="product-media" data-media>
+  <div class="mb-3 flex gap-2" role="tablist" aria-label="Product media">
+    <button type="button" role="tab" class="chip" aria-selected="true" aria-current="true" data-media-tab="photos" aria-controls="media-photos">
+      <Icon name="grid" size={18} /> Photos
+    </button>
+    <button type="button" role="tab" class="chip" aria-selected="false" aria-current="false" data-media-tab="3d" aria-controls="media-3d">
+      <Icon name="rotate" size={18} /> 3D view
+    </button>
+  </div>
+
+  <div id="media-photos" role="tabpanel" data-media-panel="photos">
+    <div class="no-scrollbar -mx-[var(--gutter)] flex snap-x snap-mandatory gap-2 overflow-x-auto px-[var(--gutter)] md:mx-0 md:grid md:grid-cols-2 md:gap-3 md:overflow-visible md:px-0" data-lenis-prevent-touch data-gallery>
+      {
+        shots.map((s, i) => (
+          <figure
+            class:list={['zoomable relative aspect-[4/5] w-[86vw] shrink-0 snap-center overflow-hidden rounded-[var(--radius-md)] bg-surface md:w-auto', i === 0 && 'md:col-span-2 md:aspect-[5/4]']}
+            data-cursor="view"
+            data-fly-source={i === 0 ? '' : undefined}
+          >
+            <div class="zoom-inner absolute inset-[8%] transition-transform duration-500 ease-[var(--ease-out)]">
+              <Garment category={p.category} color={s.color.hex} ink={s.color.ink} design={p.design} view={s.view} title={s.label} className="h-full w-full" />
+            </div>
+          </figure>
+        ))
+      }
+    </div>
+    <div class="mt-3 flex justify-center gap-1.5 md:hidden" aria-hidden="true">
+      {shots.map((_, i) => <span class:list={['h-1.5 rounded-full bg-line transition-all', i === 0 ? 'w-6 bg-ink' : 'w-1.5']} data-dot />)}
+    </div>
+  </div>
+
+  <div id="media-3d" role="tabpanel" data-media-panel="3d" hidden>
+    <div class="relative aspect-[4/5] overflow-hidden rounded-[var(--radius-md)] bg-surface md:aspect-[5/4]">
+      <ProductViewer client:visible category={p.category} design={p.design} colors={p.colors} title={p.title} />
+    </div>
+  </div>
+</div>
+
+<style>
+  @media (hover: hover) {
+    .zoomable:hover .zoom-inner {
+      transform: scale(1.35);
+    }
+  }
+</style>
+
+<script>
+  document.addEventListener('astro:page-load', () => {
+    const root = document.querySelector<HTMLElement>('[data-media]');
+    if (!root) return;
+    const tabs = root.querySelectorAll<HTMLButtonElement>('[data-media-tab]');
+    const panels = root.querySelectorAll<HTMLElement>('[data-media-panel]');
+    tabs.forEach((t) =>
+      t.addEventListener('click', () => {
+        tabs.forEach((x) => {
+          const on = x === t;
+          x.setAttribute('aria-selected', String(on));
+          x.setAttribute('aria-current', String(on));
+        });
+        panels.forEach((p) => (p.hidden = p.dataset.mediaPanel !== t.dataset.mediaTab));
+      }),
+    );
+    // Zoom follows the pointer on desktop
+    root.querySelectorAll<HTMLElement>('.zoomable').forEach((fig) => {
+      const inner = fig.querySelector<HTMLElement>('.zoom-inner')!;
+      fig.addEventListener('pointermove', (e) => {
+        const r = fig.getBoundingClientRect();
+        inner.style.transformOrigin = `${((e.clientX - r.left) / r.width) * 100}% ${((e.clientY - r.top) / r.height) * 100}%`;
+      });
+    });
+    // Carousel dots on phones
+    const gallery = root.querySelector<HTMLElement>('[data-gallery]');
+    const dots = root.querySelectorAll<HTMLElement>('[data-dot]');
+    gallery?.addEventListener(
+      'scroll',
+      () => {
+        const i = Math.round(gallery.scrollLeft / (gallery.scrollWidth / dots.length));
+        dots.forEach((d, k) => {
+          d.classList.toggle('w-6', k === i);
+          d.classList.toggle('bg-ink', k === i);
+          d.classList.toggle('w-1.5', k !== i);
+        });
+      },
+      { passive: true },
+    );
+  });
+</script>

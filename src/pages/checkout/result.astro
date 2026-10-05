@@ -1,0 +1,81 @@
+---
+/**
+ * WebXPay return URL (plan 07, steps 4–6). WebXPay POSTs `payment` + `signature` here.
+ * Verify the signature, check the order, and only then mark it paid. Declines get a friendly retry.
+ */
+import CheckoutLayout from '@/layouts/CheckoutLayout.astro';
+import Button from '@/components/ui/Button.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { getEnv } from '@/lib/server/db';
+import { verifyWebXPayResponse } from '@/lib/payments/webxpay';
+import { applyPaymentResult } from '@/lib/server/orders';
+
+let state: 'paid' | 'held' | 'declined' | 'invalid' = 'invalid';
+let number = '';
+
+if (Astro.request.method === 'POST') {
+  const env = getEnv();
+  const fd = await Astro.request.formData();
+  const body = Object.fromEntries([...fd.entries()].map(([k, v]) => [k, String(v)]));
+  const result = env.WEBXPAY_PUBLIC_KEY ? verifyWebXPayResponse({ publicKeyPem: env.WEBXPAY_PUBLIC_KEY }, body) : null;
+  if (result) {
+    // The signed response does not cover the amount, so it is not "verified" here. The order is held for an
+    // admin check (or a WebXPay status API call, once WebXPay confirms one exists) before it goes to production.
+    const out = await applyPaymentResult(result, 'webxpay', { amountVerified: false });
+    number = out.number;
+    state = out.status === 'declined' ? 'declined' : out.status === 'paid' || out.status === 'in_production' ? 'paid' : 'held';
+  }
+}
+const success = state === 'paid' || state === 'held';
+---
+
+<CheckoutLayout title={success ? 'Order confirmed' : 'Payment not completed'}>
+  <div class="cf-container max-w-2xl py-[clamp(48px,8vw,112px)]">
+    {
+      success ? (
+        <div class="text-center">
+          <span class="mx-auto mb-6 grid size-16 place-items-center rounded-full bg-brand text-black">
+            <Icon name="check" size={30} />
+          </span>
+          <p class="t-label t-muted">Order {number}</p>
+          <h1 class="t-h1 mt-3">Thank you. It is yours.</h1>
+          <p class="t-lead mx-auto mt-5 max-w-md">
+            We have emailed your receipt. Your pieces are now being printed just for you and will ship in 2–5 working days with tracking.
+          </p>
+          <div class="mt-8 flex flex-wrap justify-center gap-3">
+            <Button href="/track-order" variant="dark" arrow>Track your order</Button>
+            <Button href="/account/sign-in" variant="outline">Create an account</Button>
+          </div>
+          <span hidden data-clear-cart />
+        </div>
+      ) : (
+        <div class="text-center">
+          <span class="mx-auto mb-6 grid size-16 place-items-center rounded-full bg-surface">
+            <Icon name="alert" size={28} />
+          </span>
+          <h1 class="t-h1">{state === 'declined' ? 'The payment did not go through.' : 'We could not confirm that payment.'}</h1>
+          <p class="t-lead mx-auto mt-5 max-w-md">
+            {state === 'declined'
+              ? 'Your card was not charged. You can try again, or use a different card.'
+              : 'If money left your account, contact us with your email address and we will sort it out quickly.'}
+          </p>
+          <div class="mt-8 flex flex-wrap justify-center gap-3">
+            <Button href="/checkout" arrow>Try again</Button>
+            <Button href="/contact" variant="outline">Contact us</Button>
+          </div>
+        </div>
+      )
+    }
+  </div>
+</CheckoutLayout>
+
+<script>
+  import { clearCart } from '@/lib/stores';
+  // Only on the success view: Astro bundles scripts once per page, so gate on the marker.
+  if (document.querySelector('[data-clear-cart]')) {
+    clearCart();
+    try {
+      sessionStorage.removeItem('cf.checkout.v1');
+    } catch {}
+  }
+</script>

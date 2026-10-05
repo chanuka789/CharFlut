@@ -1,0 +1,32 @@
+---
+/** Checkout (plan 04): calm. No 3D, no parallax, no smooth scroll, no page wipe. Only clarity. */
+import BaseLayout, { type SeoProps } from './BaseLayout.astro';
+import Logo from '@/components/ui/Logo.astro';
+import Icon from '@/components/ui/Icon.astro';
+
+type Props = SeoProps;
+const seo = Astro.props;
+---
+
+<BaseLayout {...seo} noindex motion="calm" transitions={false}>
+  <header class="border-b border-line bg-bg">
+    <div class="cf-container flex h-16 items-center justify-between sm:h-20">
+      <a href="/" aria-label="CharFlut home"><Logo height={24} class="h-[22px] w-auto sm:h-6" /></a>
+      <p class="flex items-center gap-2 text-sm font-semibold">
+        <Icon name="lock" size={18} /> <span class="hidden xs:inline">Secure checkout</span>
+      </p>
+    </div>
+  </header>
+  <main id="main" class="min-h-[70vh] bg-bg">
+    <slot />
+  </main>
+  <footer class="border-t border-line">
+    <div class="cf-container flex flex-wrap gap-x-6 gap-y-2 py-6 text-sm text-muted">
+      <a href="/help/shipping" class="cf-link">Shipping</a>
+      <a href="/help/returns" class="cf-link">Returns</a>
+      <a href="/legal/terms" class="cf-link">Terms</a>
+      <a href="/legal/privacy" class="cf-link">Privacy</a>
+      <a href="/contact" class="cf-link">Help</a>
+    </div>
+  </footer>
+</BaseLayout>

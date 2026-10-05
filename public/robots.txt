@@ -1,0 +1,8 @@
+User-agent: *
+Disallow: /admin
+Disallow: /api/
+Disallow: /checkout
+Disallow: /account
+Allow: /
+
+Sitemap: https://charflut.com/sitemap-index.xml

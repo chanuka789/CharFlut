@@ -1,0 +1,70 @@
+---
+/** Labelled form field: input, select or textarea, with hint and error text wired for screen readers. */
+interface Props {
+  label: string;
+  name: string;
+  type?: string;
+  as?: 'input' | 'select' | 'textarea';
+  options?: { value: string; label: string }[];
+  required?: boolean;
+  autocomplete?: string;
+  placeholder?: string;
+  hint?: string;
+  error?: string;
+  value?: string;
+  class?: string;
+  inputmode?: 'text' | 'email' | 'tel' | 'numeric' | 'decimal' | 'search' | 'url';
+}
+const {
+  label,
+  name,
+  type = 'text',
+  as = 'input',
+  options = [],
+  required,
+  autocomplete,
+  placeholder,
+  hint,
+  error,
+  value,
+  class: className,
+  inputmode,
+} = Astro.props;
+const id = `f-${name}`;
+const describedBy = [hint && `${id}-hint`, error && `${id}-err`].filter(Boolean).join(' ') || undefined;
+const common = {
+  id,
+  name,
+  required,
+  autocomplete,
+  'aria-invalid': error ? ('true' as const) : undefined,
+  'aria-describedby': describedBy,
+  class: 'input',
+};
+---
+
+<div class:list={['field', className]}>
+  <label for={id} class="field-label">
+    {label}
+    {!required && <span class="t-muted font-normal"> (optional)</span>}
+  </label>
+  {
+    as === 'select' ? (
+      <select {...common}>
+        {options.map((o) => (
+          <option value={o.value} selected={o.value === value}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+    ) : as === 'textarea' ? (
+      <textarea {...common} placeholder={placeholder}>
+        {value}
+      </textarea>
+    ) : (
+      <input {...common} type={type as astroHTML.JSX.HTMLInputTypeAttribute} placeholder={placeholder} value={value} inputmode={inputmode} />
+    )
+  }
+  {hint && <p id={`${id}-hint`} class="field-hint">{hint}</p>}
+  <p id={`${id}-err`} class="field-error" role="alert" hidden={!error}>{error}</p>
+</div>

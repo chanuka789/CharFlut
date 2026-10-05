@@ -1,0 +1,60 @@
+---
+/**
+ * "New drop" (plan 04 #3): pinned horizontal scroll on desktop (vertical scroll moves products sideways),
+ * native swipe with scroll-snap on touch screens.
+ */
+import ProductCard from '@/components/commerce/ProductCard.astro';
+import Button from '@/components/ui/Button.astro';
+import type { Drop, Product } from '@/lib/types';
+
+interface Props {
+  drop: Drop;
+  products: Product[];
+}
+const { drop, products } = Astro.props;
+---
+
+<section data-hscroll class="relative overflow-hidden bg-bg lg:h-[100svh]" aria-labelledby="drop-rail-title">
+  <div class="flex h-full flex-col justify-center py-[var(--section-y)] lg:py-0">
+    <div class="cf-container mb-8 flex flex-col gap-5 md:flex-row md:items-end md:justify-between lg:mb-12">
+      <div>
+        <p class="t-label t-muted mb-4" data-reveal>Drop {drop.number} · Now live</p>
+        <h2 id="drop-rail-title" class="t-h1" data-split>{drop.title}</h2>
+      </div>
+      <div class="flex items-center gap-6" data-reveal>
+        <p class="t-muted hidden max-w-xs text-sm md:block">{drop.story.split('. ')[0]}.</p>
+        <Button href={`/drops/${drop.slug}`} variant="dark" arrow>See the drop</Button>
+      </div>
+    </div>
+
+    <div
+      data-hscroll-track
+      class="no-scrollbar flex snap-x snap-mandatory gap-3 overflow-x-auto px-[var(--gutter)] sm:gap-5 lg:snap-none lg:overflow-visible"
+      data-lenis-prevent-touch
+    >
+      {
+        products.map((p, i) => (
+          <div class="w-[72vw] shrink-0 snap-start sm:w-[44vw] md:w-[34vw] lg:w-[24vw] 3xl:w-[20vw]">
+            <ProductCard product={p} index={i} size="large" />
+          </div>
+        ))
+      }
+      <a
+        href={`/drops/${drop.slug}`}
+        class="group grid w-[72vw] shrink-0 snap-start place-items-center rounded-[var(--radius-md)] bg-black text-white sm:w-[44vw] md:w-[34vw] lg:w-[24vw]"
+        data-cursor="view"
+      >
+        <span class="flex flex-col items-center gap-4 p-8 text-center">
+          <span class="font-display text-[clamp(2rem,4vw,3.5rem)] font-black uppercase leading-none">All {products.length}<br />pieces</span>
+          <span class="grid size-14 place-items-center rounded-full bg-brand text-black transition-transform duration-500 group-hover:rotate-45">→</span>
+        </span>
+      </a>
+    </div>
+
+    <div class="cf-container mt-8 hidden lg:block" aria-hidden="true">
+      <div class="h-px w-full bg-line">
+        <div data-hscroll-progress class="h-px origin-left bg-ink"></div>
+      </div>
+    </div>
+  </div>
+</section>

@@ -1,0 +1,49 @@
+---
+/** Eyebrow + big title + optional link, used at the top of every content section. */
+import Icon from './Icon.astro';
+
+interface Props {
+  eyebrow?: string;
+  title: string;
+  lead?: string;
+  href?: string;
+  linkLabel?: string;
+  as?: 'h1' | 'h2';
+  size?: 'h1' | 'h2' | 'display';
+  align?: 'start' | 'center';
+  class?: string;
+}
+const {
+  eyebrow,
+  title,
+  lead,
+  href,
+  linkLabel = 'View all',
+  as: Tag = 'h2',
+  size = 'h2',
+  align = 'start',
+  class: className,
+} = Astro.props;
+---
+
+<header
+  class:list={[
+    'mb-[clamp(28px,4vw,56px)] flex flex-col gap-5 md:flex-row md:items-end md:justify-between',
+    align === 'center' && 'items-center text-center md:flex-col md:items-center',
+    className,
+  ]}
+>
+  <div class:list={['max-w-3xl', align === 'center' && 'mx-auto']}>
+    {eyebrow && <p class="t-label mb-4 t-muted" data-reveal>{eyebrow}</p>}
+    <Tag class={`t-${size}`} data-split>{title}</Tag>
+    {lead && <p class="t-lead mt-5 max-w-xl" data-reveal>{lead}</p>}
+  </div>
+  {
+    href && (
+      <a href={href} class="group inline-flex shrink-0 items-center gap-2 font-semibold" data-reveal>
+        <span class="cf-link">{linkLabel}</span>
+        <Icon name="arrow-up-right" size={18} class="transition-transform duration-300 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+      </a>
+    )
+  }
+</header>

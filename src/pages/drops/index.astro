@@ -1,0 +1,58 @@
+---
+import StoreLayout from '@/layouts/StoreLayout.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import Editorial from '@/components/home/Editorial.astro';
+import Icon from '@/components/ui/Icon.astro';
+import { drops, getProduct } from '@/data/catalog';
+
+const now = Date.now();
+const list = drops.map((d) => {
+  const hero = getProduct(d.productSlugs[0])!;
+  return { ...d, hero, live: new Date(d.launchAt).getTime() <= now, date: new Date(d.launchAt) };
+});
+const fmt = new Intl.DateTimeFormat('en-GB', { day: 'numeric', month: 'long', year: 'numeric' });
+---
+
+<StoreLayout title="Drops" description="CharFlut collections. Each drop is a small run of new designs with its own story.">
+  <PageHeader
+    title="Drops"
+    eyebrow="Collections"
+    lead="Each drop is a small run of new designs with its own story, colour and light. Join the waitlist to get in first."
+    crumbs={[{ label: 'Home', href: '/' }, { label: 'Drops' }]}
+    outlineWord="DROPS"
+  />
+  <section class="bg-bg pb-[var(--section-y)]">
+    <div class="cf-container grid gap-[clamp(48px,8vw,120px)]">
+      {
+        list.map((d, i) => (
+          <a href={`/drops/${d.slug}`} class:list={['group grid items-center gap-6 md:grid-cols-12 md:gap-10']} data-cursor="view">
+            <div class:list={['md:col-span-7', i % 2 && 'md:order-2 md:col-start-6']} data-reveal>
+              <Editorial
+                class="aspect-[4/3]"
+                tone={i % 2 ? '#1C2433' : '#111111'}
+                word={d.number}
+                category={d.hero.category}
+                color={d.hero.colors[0].hex}
+                ink={d.hero.colors[0].ink}
+                design={d.hero.design}
+                view="back"
+              />
+            </div>
+            <div class:list={['md:col-span-5', i % 2 && 'md:order-1']} data-reveal>
+              <p class="t-label t-muted mb-4 flex items-center gap-3">
+                <span class="inline-block size-2.5 rounded-full" style={`background:${d.lightHex}`} />
+                Drop {d.number} · {d.live ? 'Live now' : `Launches ${fmt.format(d.date)}`}
+              </p>
+              <h2 class="t-h1">{d.title}</h2>
+              <p class="t-lead mt-4 max-w-md">{d.story}</p>
+              <span class="mt-6 inline-flex items-center gap-2 font-semibold">
+                <span class="cf-link">{d.live ? 'Shop the drop' : 'Join the waitlist'}</span>
+                <Icon name="arrow-right" size={18} class="transition-transform duration-300 group-hover:translate-x-1" />
+              </span>
+            </div>
+          </a>
+        ))
+      }
+    </div>
+  </section>
+</StoreLayout>

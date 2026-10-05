@@ -1,0 +1,28 @@
+---
+/** Admin panel with a header row (title, optional link/actions). */
+interface Props {
+  title: string;
+  subtitle?: string;
+  href?: string;
+  linkLabel?: string;
+  class?: string;
+  flush?: boolean;
+}
+const { title, subtitle, href, linkLabel = 'View all', class: className, flush = false } = Astro.props;
+---
+
+<section class:list={['rounded-[var(--radius-lg)] border border-line bg-surface', className]}>
+  <header class="flex items-start justify-between gap-4 px-5 pt-5">
+    <div>
+      <h2 class="font-display text-base font-extrabold uppercase tracking-wide">{title}</h2>
+      {subtitle && <p class="mt-0.5 text-sm text-muted">{subtitle}</p>}
+    </div>
+    <div class="flex shrink-0 items-center gap-2">
+      <slot name="actions" />
+      {href && <a href={href} class="text-sm font-semibold text-muted hover:text-ink">{linkLabel} →</a>}
+    </div>
+  </header>
+  <div class:list={[flush ? 'mt-4' : 'p-5']}>
+    <slot />
+  </div>
+</section>

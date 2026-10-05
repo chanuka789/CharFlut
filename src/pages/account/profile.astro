@@ -1,0 +1,40 @@
+---
+import AccountLayout from '@/layouts/AccountLayout.astro';
+import Field from '@/components/ui/Field.astro';
+import Button from '@/components/ui/Button.astro';
+import { requireCustomer } from '@/lib/server/account';
+import { db } from '@/lib/server/db';
+
+const result = await requireCustomer(Astro);
+if (result instanceof Response) return result;
+let customer = result;
+let saved = false;
+if (Astro.request.method === 'POST' && customer.id !== 'demo') {
+  const fd = await Astro.request.formData();
+  const name = String(fd.get('name') ?? '').trim().slice(0, 80);
+  const consent = fd.get('marketing') === 'on' ? 1 : 0;
+  await db()?.prepare("UPDATE customers SET name = ?, marketing_consent = ?, consent_source = 'account' WHERE id = ?").bind(name || null, consent, customer.id).run();
+  customer = { ...customer, name, marketing_consent: consent };
+  saved = true;
+}
+---
+
+<AccountLayout title="Profile" customer={customer}>
+  <form method="post" class="panel grid max-w-xl gap-5">
+    <Field label="Name" name="name" value={customer.name ?? ''} autocomplete="name" />
+    <Field label="Email" name="email_display" value={customer.email} hint="This is the email you sign in with." />
+    <label class="check">
+      <input type="checkbox" name="marketing" checked={!!customer.marketing_consent} />
+      <span>Email me about new drops and early access. One email per drop.</span>
+    </label>
+    <div class="flex items-center gap-4">
+      <Button type="submit" variant="dark">Save</Button>
+      {saved && <p class="t-small" role="status">Saved.</p>}
+    </div>
+  </form>
+  <div class="panel-line mt-6 max-w-xl">
+    <h2 class="t-h3">Your data</h2>
+    <p class="t-muted mt-2">Ask for a copy of your data or to delete your account. We reply within 30 days.</p>
+    <a href="mailto:privacy@charflut.com?subject=Data%20request" class="btn btn-outline btn-sm mt-4"><span>Request export or deletion</span></a>
+  </div>
+</AccountLayout>

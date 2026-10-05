@@ -1,0 +1,15 @@
+---
+import StoreLayout from '@/layouts/StoreLayout.astro';
+import PageHeader from '@/components/ui/PageHeader.astro';
+import Wishlist from '@/components/commerce/Wishlist';
+---
+
+<!-- The wishlist lives in this browser, so it works for guests too. -->
+<StoreLayout title="Wishlist" noindex>
+  <PageHeader title="Wishlist" lead="Saved on this device. Sign in to keep it across devices (coming in phase 2)." crumbs={[{ label: 'Home', href: '/' }, { label: 'Account', href: '/account' }, { label: 'Wishlist' }]} />
+  <section class="bg-bg pb-[var(--section-y)]">
+    <div class="cf-container">
+      <Wishlist client:load />
+    </div>
+  </section>
+</StoreLayout>

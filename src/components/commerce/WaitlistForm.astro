@@ -1,0 +1,21 @@
+---
+/** Drop waitlist / coming-soon sign-up. Reuses the newsletter endpoint with a source tag. */
+interface Props {
+  source: string;
+  cta?: string;
+  class?: string;
+}
+const { source, cta = 'Join the waitlist', class: className } = Astro.props;
+---
+
+<form method="post" action="/api/newsletter" class:list={['flex flex-col gap-2 sm:flex-row', className]} data-newsletter>
+  <input type="hidden" name="source" value={source} />
+  <label for={`wl-${source}`} class="sr-only">Email address</label>
+  <input id={`wl-${source}`} name="email" type="email" required autocomplete="email" placeholder="you@email.com" class="input flex-1" />
+  <button type="submit" class="btn btn-primary"><span>{cta}</span></button>
+  <p class="field-hint basis-full" data-msg aria-live="polite"></p>
+</form>
+
+<script>
+  import './newsletter-client';
+</script>

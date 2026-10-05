@@ -1,0 +1,61 @@
+---
+/** Account area: side navigation on desktop, scrollable tabs on phones. Redirects to sign-in without a session. */
+import StoreLayout from './StoreLayout.astro';
+import Icon from '@/components/ui/Icon.astro';
+import type { IconName } from '@/components/ui/icons';
+import type { Customer } from '@/lib/server/auth';
+
+interface Props {
+  title: string;
+  customer: Customer | null;
+}
+const { title, customer } = Astro.props;
+const nav: { label: string; href: string; icon: IconName }[] = [
+  { label: 'Overview', href: '/account', icon: 'home' },
+  { label: 'Orders', href: '/account/orders', icon: 'box' },
+  { label: 'Addresses', href: '/account/addresses', icon: 'home' },
+  { label: 'Wishlist', href: '/account/wishlist', icon: 'heart' },
+  { label: 'Profile', href: '/account/profile', icon: 'user' },
+];
+const path = Astro.url.pathname.replace(/\/$/, '') || '/account';
+---
+
+<StoreLayout title={title} noindex>
+  <section class="bg-bg pb-[var(--section-y)] pt-[calc(var(--header-h)+var(--bar-h)+clamp(24px,5vw,64px))]">
+    <div class="cf-container">
+      <p class="t-label t-muted mb-3">{customer ? customer.email : 'Your account'}</p>
+      <h1 class="t-h1 mb-10">{title}</h1>
+      <div class="grid gap-10 lg:grid-cols-12">
+        <nav aria-label="Account" class="lg:col-span-3">
+          <ul class="no-scrollbar -mx-[var(--gutter)] flex gap-2 overflow-x-auto px-[var(--gutter)] lg:mx-0 lg:flex-col lg:gap-1 lg:px-0">
+            {
+              nav.map((n) => (
+                <li class="shrink-0">
+                  <a
+                    href={n.href}
+                    aria-current={path === n.href ? 'page' : undefined}
+                    class="flex items-center gap-3 rounded-[var(--radius-md)] border border-line px-4 py-2.5 text-sm font-semibold hover:border-ink aria-[current=page]:border-ink aria-[current=page]:bg-ink aria-[current=page]:text-bg lg:border-transparent"
+                  >
+                    <Icon name={n.icon} size={18} /> {n.label}
+                  </a>
+                </li>
+              ))
+            }
+            {
+              customer && (
+                <li class="shrink-0">
+                  <form method="post" action="/api/auth/sign-out">
+                    <button class="flex items-center gap-3 rounded-[var(--radius-md)] px-4 py-2.5 text-sm font-semibold text-muted hover:text-ink">
+                      <Icon name="arrow-left" size={18} /> Sign out
+                    </button>
+                  </form>
+                </li>
+              )
+            }
+          </ul>
+        </nav>
+        <div class="lg:col-span-9"><slot /></div>
+      </div>
+    </div>
+  </section>
+</StoreLayout>
